@@ -2,8 +2,8 @@ from fastapi.testclient import TestClient
 from src.main import create_app
 
 
-def test_health_and_unknown_order():
-    with TestClient(create_app()) as client:
+def test_health_and_unknown_order(guest):
+    with guest as client:
         assert client.get("/api/health").json() == {"status": "ok"}
         assert client.get("/api/orders").json() == []
         assert client.get("/api/orders/unknown").status_code == 404

@@ -113,6 +113,8 @@ A lost confirmation response can be retried safely. Draft creation is not idempo
 
 Next: structured Gemini extraction with ambiguity handling and an explicit saved-example fallback. GitHub OAuth and owner-only Resend integration remain release-two work. The full scope is in [the original plan](docs/project-plan.md).
 
+See [the next-phase implementation plan](docs/next-phase-plan.md) for the extraction milestones, verification gates and subsequent public-demo readiness work.
+
 ## Branch workflow
 
 `master` retains the scaffold baseline. Implement, verify and commit logical steps on `development`; review before promoting to `master`.

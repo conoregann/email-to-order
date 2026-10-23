@@ -6,7 +6,8 @@ from src.auth.service import current_guest, require_browser_header
 from src.database import get_db
 from src.orders.drafts import create_draft, draft_response, owned_draft, save_draft
 from src.orders.models import Draft
-from src.orders.schemas import CreateDraft, SampleEmail, UpdateDraft
+from src.orders.schemas import CreateDraft, SampleEmail, UpdateDraft, ConfirmDraft
+from src.orders.confirmation import confirm_draft
 from src.orders.service import list_samples
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -31,3 +32,9 @@ def get_order(draft_id: str, response: Response, guest: GuestSession = Depends(c
 def update_order(draft_id: str, payload: UpdateDraft, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):
     draft = owned_draft(db, guest.id, draft_id)
     return draft_response(db, save_draft(db, draft, payload))
+
+@router.post("/{draft_id}/confirm", dependencies=[Depends(require_browser_header)])
+def confirm_order(draft_id: str, payload: ConfirmDraft, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):
+    draft = owned_draft(db, guest.id, draft_id)
+    confirm_draft(db, draft, payload.version)
+    return draft_response(db, draft)

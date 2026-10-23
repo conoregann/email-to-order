@@ -35,7 +35,7 @@ def draft_response(db: Session, draft: Draft) -> dict:
     return {"id": draft.id, "status": draft.status, "version": draft.version,
             "original_email": draft.original_email, "initial_values": draft.initial_values,
             "source": draft.source, "values": values.model_dump(mode="json"),
-            "validation": validate(values), "created_at": draft.created_at, "updated_at": draft.updated_at,
+            "validation": order.snapshot["validation"] if order else validate(values), "created_at": draft.created_at, "updated_at": draft.updated_at,
             "confirmed": order.snapshot if order else None}
 
 

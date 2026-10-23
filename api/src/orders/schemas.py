@@ -23,6 +23,7 @@ class LineValues(InputModel):
 class DraftValues(InputModel):
     customer_id: str | None = Field(default=None, max_length=80)
     delivery_address: str = Field(default="", max_length=1500)
+    delivery_instructions: str = Field(default="", max_length=1500)
     delivery_confirmed: bool = False
     requested_delivery_date: date | None = None
     lines: list[LineValues] = Field(default_factory=list, max_length=50)

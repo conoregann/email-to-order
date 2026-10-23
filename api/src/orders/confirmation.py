@@ -45,7 +45,7 @@ def confirm_draft(db: Session, draft: Draft, version: int) -> None:
     snapshot = {"id": order_id, "number": number, "confirmed_at": now,
                 "customer": customer.model_dump(mode="json"), "values": values.model_dump(mode="json"),
                 "validation": validation, "original_email": draft.original_email,
-                "initial_values": draft.initial_values, "source": draft.source, "confirmation_preview": preview}
+                "extraction": draft.extraction, "initial_values": draft.initial_values, "source": draft.source, "confirmation_preview": preview}
     db.add(ConfirmedOrder(id=order_id, draft_id=draft.id, guest_id=draft.guest_id,
                           number=number, snapshot=snapshot, confirmed_at=now))
     db.commit()

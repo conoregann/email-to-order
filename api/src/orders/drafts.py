@@ -34,7 +34,9 @@ def draft_response(db: Session, draft: Draft) -> dict:
     order = db.scalar(select(ConfirmedOrder).where(ConfirmedOrder.draft_id == draft.id))
     return {"id": draft.id, "status": draft.status, "version": draft.version,
             "original_email": draft.original_email, "initial_values": draft.initial_values,
-            "source": draft.source, "values": values.model_dump(mode="json"),
+            "source": draft.source, "extraction": draft.extraction,
+            "extraction_status": draft.extraction_status, "extraction_attempt_id": draft.extraction_attempt_id,
+            "extraction_error": draft.extraction_error, "values": values.model_dump(mode="json"),
             "validation": order.snapshot["validation"] if order else validate(values), "created_at": draft.created_at, "updated_at": draft.updated_at,
             "confirmed": order.snapshot if order else None}
 

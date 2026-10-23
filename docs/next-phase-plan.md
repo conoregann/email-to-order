@@ -2,6 +2,19 @@
 
 Planning baseline: 23 October 2026, `development` at `35d6ab6`.
 
+## Execution record — 23 October 2026
+
+Steps 1–5 are implemented and committed on `development`. Step 6 automated and browser checks
+pass: 85 tests on SQLite and disposable PostgreSQL 14, frontend lint/build, and desktop/mobile
+checks with a temporary fictional provider. See [verification results](verification.md).
+
+The live integration gate remains open: no model was configured and the actual Gemini
+project's free-tier eligibility, quotas and billing configuration were not verified. Extraction
+remains disabled. A deliberate fictional-data live smoke check is still required before
+calling the live integration verified. Public-demo readiness and deployment below remain pending.
+
+The tables and implementation sequence below describe the original planning baseline.
+
 ## Goal and assumptions
 
 Complete build-plan step 3: a visitor can extract a sample or pasted email into an editable draft, resolve uncertain details, and confirm it using the existing backend checks. Extraction failures must leave the email available for retry or manual entry. The app must remain useful without an AI key.

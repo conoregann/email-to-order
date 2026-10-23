@@ -4,18 +4,17 @@ A fictional distributor demo for turning customer emails into checked, editable 
 
 ## Current development phase
 
-The manual workflow is implemented on `development`:
+AI-assisted drafts are implemented on `development`. Live extraction is off by default; manual entry and explicit saved examples work without a Gemini key.
 
-- Create a draft from a sample email or pasted text.
-- Compare the original email with editable customer, address and product lines.
-- Resolve product ambiguity, quantities, pack sizes and stock issues.
-- Save drafts, review backend checks and confirm a valid order.
-- Reopen drafts and read-only confirmed orders from history.
-- View a simulated confirmation email and inspect initial versus approved values.
+- Save a fictional sample or pasted email before starting extraction.
+- Extract bounded facts with Gemini, then match customers/products deterministically on the backend.
+- Review every suggested product and address, resolve blockers, and confirm using the existing backend rules.
+- Retry failed extraction on the same draft or continue manually. An unchanged matching sample can use clearly labelled saved values.
+- Inspect the original email, validated extraction and provenance, normalized initial values, and approved values, including after confirmation.
 
-Samples use clearly labelled saved values, not live AI. Pasted emails start with blank order fields. The original email is preserved exactly and rendered as plain text.
+Saved examples are never presented as AI output. Email text is preserved exactly and rendered as plain text. Live provider/project verification remains outstanding; mocked tests do not establish that a configured Gemini project works.
 
-![Manual order review](docs/screenshots/review-desktop.png)
+![AI suggestion after staff review](docs/screenshots/ai-review-desktop.png)
 
 ## Local setup
 
@@ -36,6 +35,38 @@ cd ../api
 Open [the local app](http://127.0.0.1:8000). No AI key or external database is needed. The default database is `.local/orders.db`, excluded from Git. Migrations are explicit; application startup does not create tables.
 
 For frontend development, run `npm run dev` from `app/` in another terminal and use the Vite URL. Vite forwards `/api` to port 8000. Use `../.venv/bin/python -m uvicorn src.main:app --reload --host 127.0.0.1` from `api/` for backend reloads.
+
+## Optional Gemini extraction
+
+Install the backend dependencies and run migrations after pulling this change:
+
+```sh
+.venv/bin/python -m pip install -e './api[dev]'
+.venv/bin/python -m alembic -c api/alembic.ini upgrade head
+```
+
+Before enabling live calls, verify the chosen model's structured-output support, free-tier eligibility, actual project quotas and billing configuration. Use the [Gemini structured-output documentation](https://ai.google.dev/gemini-api/docs/structured-output) and [current model pricing](https://ai.google.dev/gemini-api/docs/pricing). No model is selected automatically, and there is no fallback model or billing setup in the app.
+
+Set these backend-only values in `.env`, then restart FastAPI:
+
+```dotenv
+GEMINI_API_KEY=your-key
+GEMINI_MODEL=your-verified-free-tier-model
+EXTRACTION_ENABLED=true
+EXTRACTION_GUEST_LIMIT=5
+EXTRACTION_DAILY_LIMIT=25
+EXTRACTION_TIMEOUT_SECONDS=30
+```
+
+Limits may be lowered, up to the demo ceilings shown. Each provider attempt reserves allowance in a short database transaction: 5 per guest over a rolling 24 hours and 25 globally per UTC day by default. Failures, refusals and timeouts count; uncertain provider use is never refunded. Reservations survive process restarts and guest deletion. Disabled or missing configuration consumes no allowance. Application caps do not verify or replace provider quotas or billing controls.
+
+Calls use the official Python SDK with automatic retries disabled, a 30-second default deadline (maximum 60), a 20,000-character email limit, an 8,192-token output limit and a 64,000-byte structured-response limit. Outputs have at most 50 lines. Relative dates and dates without an explicit year remain unresolved because pasted email has no trusted timestamp. Unknown units stay unknown; quantities and pack sizes are never guessed or converted.
+
+Starting extraction sends the original email text to Google Gemini; use fictional data only. Free-tier content may be used to improve Google's products under its [current pricing and data-use terms](https://ai.google.dev/gemini-api/docs/pricing). The app stores the original email, validated facts, model/prompt/attempt identifiers and timestamp, initial suggestions and staff-approved values. It stores no duplicate raw provider response and writes no email/provider-body logs. Schema validation limits shape and authority; it cannot establish that every extracted fact is correct. Staff review remains required.
+
+If a call fails, open the saved draft to retry or enter details manually. After a lost response, use **Reload extraction status** to recover the persisted attempt. A crashed attempt expires after its call deadline plus 15 seconds. A new attempt is allowed only after failure, on an unedited manual draft. Successful extraction initializes values once; staff saves or confirmations win over late results. Saved-example recovery is available only for an unchanged matching sample.
+
+To disable extraction, set `EXTRACTION_ENABLED=false` and restart FastAPI. Existing drafts, manual entry and saved examples remain available. No live smoke check was performed on 23 October 2026: a key was present locally, but no model or verified free-tier project configuration was available.
 
 ## PostgreSQL / Neon configuration
 
@@ -68,6 +99,7 @@ SQLAlchemy → SQLite locally / PostgreSQL on Neon
 | Frontend | `/orders`, `/orders/new`, `/orders/:id/review`, `/orders/:id/confirmed` |
 | Guest session | `POST /api/auth/guest` |
 | Drafts and history | `GET/POST /api/orders`, `GET/PUT /api/orders/:id` |
+| Extraction | `GET /api/orders/extraction-config`, `POST /api/orders/:id/extract`, `POST /api/orders/:id/saved-example` |
 | Confirmation | `POST /api/orders/:id/confirm` |
 | Fictional records | `GET /api/customers`, `GET /api/catalogue/products`, `GET /api/orders/samples` |
 | Health / API reference | `/api/health`, `/docs` |
@@ -103,15 +135,15 @@ TEST_DATABASE_URL='postgresql+psycopg://user:password@localhost/test_database' \
 
 The test user needs permission to create and drop schemas. Each database-backed test uses an isolated schema. GitHub Actions runs frontend checks and backend tests with SQLite and PostgreSQL 16.
 
-The 26-test suite covers migrations, ownership, expiration, durable drafts, version conflicts, catalogue pricing, quantities, duplicate-line stock checks, concurrent confirmation and immutable snapshots. See [verification notes](docs/verification.md) for browser scenarios and evidence.
+The 85-test suite covers extraction contracts, matching, SDK transport behavior, durable usage caps, failure recovery, extraction/save/confirmation races, provenance, migrations, ownership, expiration, durable drafts, version conflicts, catalogue pricing, quantities, duplicate-line stock checks, concurrent confirmation and immutable snapshots. See [verification notes](docs/verification.md) for browser scenarios and evidence.
 
 ## Remaining work and limitations
 
-This phase is a local manual demo. Live Gemini extraction, usage limits, a global extraction cap, scheduled expired-record cleanup and public deployment are still pending. Expiration blocks access but does not yet physically delete database records. Rate limits and retention cleanup must be completed before opening the demo publicly. No email is sent, stock is not reserved, requested dates are not guaranteed, and there are no tax or shipping calculations.
+This phase is a local AI-assisted demo with deterministic provider tests and browser checks. Actual Gemini model/project verification, scheduled expired-record cleanup and public deployment are still pending. Expiration blocks access but does not yet physically delete database records. Rate limits and retention cleanup must be completed before opening the demo publicly. No email is sent, stock is not reserved, requested dates are not guaranteed, and there are no tax or shipping calculations.
 
 A lost confirmation response can be retried safely. Draft creation is not idempotent: if a create response is lost, check Orders before creating again. No performance or time-saving claims have been measured.
 
-Next: structured Gemini extraction with ambiguity handling and an explicit saved-example fallback. GitHub OAuth and owner-only Resend integration remain release-two work. The full scope is in [the original plan](docs/project-plan.md).
+Next: verify a free-tier Gemini project with a deliberate fictional-data smoke check, then complete public-demo hardening and deployment. GitHub OAuth and owner-only Resend integration remain release-two work. The full scope is in [the original plan](docs/project-plan.md).
 
 See [the next-phase implementation plan](docs/next-phase-plan.md) for the extraction milestones, verification gates and subsequent public-demo readiness work.
 

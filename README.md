@@ -8,6 +8,8 @@ The initial `master` commit provides the React/TypeScript/Vite frontend, Tailwin
 
 Frontend routes: `/orders`, `/orders/new`, `/orders/:orderId/review`, `/orders/:orderId/confirmed`. Review and confirmation are explicitly labelled placeholders. API routes are under `/api`; inspect `/docs` for OpenAPI.
 
+On `development`, five sample emails, four catalogue products and two customers with saved addresses are now available through typed API responses. The New order screen loads samples with loading, retry and editable plain-text states. Seed records are immutable Python fixtures for now; database-backed seeding follows with persistence.
+
 ## Local setup
 
 Requires Node 22.12+ and Python 3.12+. Run from the repository root:

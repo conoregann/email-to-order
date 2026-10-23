@@ -39,6 +39,7 @@ def test_concurrent_confirmations_have_one_order(guest, app):
         results = list(pool.map(lambda _: confirm(guest, draft), range(8)))
     assert all(result.status_code == 200 for result in results), [r.text for r in results]
     assert len({r.json()["confirmed"]["number"] for r in results}) == 1
+    assert all(result.json()["status"] == "confirmed" for result in results)
     with app.state.sessions() as db:
         assert db.scalar(select(func.count()).select_from(ConfirmedOrder)) == 1
 

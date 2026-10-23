@@ -13,6 +13,7 @@ from src.orders.validation import validate
 def confirm_draft(db: Session, draft: Draft, version: int) -> None:
     existing = db.scalar(select(ConfirmedOrder).where(ConfirmedOrder.draft_id == draft.id))
     if existing:
+        db.refresh(draft)
         return
     if version != draft.version:
         raise HTTPException(409, "Draft changed. Reload and review the latest version before confirming.")

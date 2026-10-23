@@ -59,3 +59,25 @@ def test_backend_prices_and_input_limits(guest):
     draft = create_sample(guest)
     draft["values"]["lines"][0]["price"] = "0.01"
     assert save(guest, draft).status_code == 422
+
+
+def test_persistence_across_application_instances(guest, app):
+    from src.main import create_app
+    draft = create_sample(guest)
+    restarted = create_app(db_url=app.state.engine.url.render_as_string(hide_password=False))
+    with TestClient(restarted) as client:
+        client.cookies.set("eto_guest", guest.cookies.get("eto_guest"), path="/api")
+        response = client.get(f"/api/orders/{draft['id']}")
+        assert response.status_code == 200
+        assert response.json()["initial_values"] == draft["initial_values"]
+    restarted.state.engine.dispose()
+
+
+def test_save_updates_and_removes_multiple_lines(guest):
+    draft = create_sample(guest)
+    lines = draft["values"]["lines"]
+    first = save(guest, draft, lines=[*lines, *lines]).json()
+    assert len(first["values"]["lines"]) == 2
+    second = save(guest, first, lines=[lines[0]]).json()
+    assert len(second["values"]["lines"]) == 1
+    assert save(guest, second, lines=[]).json()["validation"]["can_confirm"] is False

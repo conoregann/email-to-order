@@ -11,6 +11,7 @@ from src.orders.confirmation import confirm_draft
 from src.orders.service import list_samples
 from src.orders.validation import quantity_options
 from src.integrations.gemini import available
+from src.catalogue.service import workspace_products
 from src.orders.extraction import ExtractDraft, extract_draft
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -63,4 +64,4 @@ def saved_example(draft_id: str, payload: ConfirmDraft, guest: GuestSession = De
 @router.post("/{draft_id}/quantity-options", dependencies=[Depends(require_browser_header)])
 def preview_quantity(draft_id: str, payload: LineValues, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):
     owned_draft(db, guest.id, draft_id)
-    return {"suggestion": quantity_options(payload)}
+    return {"suggestion": quantity_options(payload, workspace_products(db, guest.id))}

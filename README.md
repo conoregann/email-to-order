@@ -108,6 +108,8 @@ Two customers, saved addresses, four products and five sample scenarios remain i
 
 During order review, use **Add new customer** in the Customer step to save a name and email and select that customer. New customers are stored in the current guest workspace and are available for later drafts there. Review the delivery address separately. Customer creation does not send email; confirmed orders preserve the selected customer details. Run migrations after pulling this change.
 
+For a missing catalogue item, use **Add new product** beneath the product dropdown in an order line. Supply its SKU, name, units per case, EUR price per case and simulated stock. The product is saved in this workspace and selected for that line; product approval, whole-case quantities and stock checks still apply. **Add order line** adds another line to the draft.
+
 ## Order and workspace rules
 
 - Every order read and write is scoped to an active guest session. Other visitors receive 404 for an order they do not own.

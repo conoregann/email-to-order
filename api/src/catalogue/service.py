@@ -1,4 +1,7 @@
 from src.catalogue.schemas import Product
+from src.catalogue.models import WorkspaceProduct
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 PRODUCTS = (
     Product(sku="OAT-1L-06", name="Barista oat milk 1L", aliases=("oat milk", "barista oat"), pack_size=6, price="13.80", stock_cases=40),
@@ -9,3 +12,10 @@ PRODUCTS = (
 
 def list_products() -> tuple[Product, ...]:
     return PRODUCTS
+
+
+def workspace_products(db: Session, guest_id: str) -> tuple[Product, ...]:
+    records = db.scalars(select(WorkspaceProduct).where(WorkspaceProduct.guest_id == guest_id)
+                         .order_by(WorkspaceProduct.name, WorkspaceProduct.sku)).all()
+    return PRODUCTS + tuple(Product(sku=p.sku, name=p.name, aliases=(), pack_size=p.pack_size,
+                                   price=p.price, stock_cases=p.stock_cases) for p in records)

@@ -1,13 +1,14 @@
 from collections import defaultdict
 from decimal import Decimal, ROUND_CEILING
 from src.catalogue.service import PRODUCTS
+from src.catalogue.schemas import Product
 from src.customers.service import CUSTOMERS
 from src.customers.schemas import Customer
 from src.orders.schemas import DraftValues, LineValues
 
 
-def quantity_options(line: LineValues) -> dict | None:
-    product = next((product for product in PRODUCTS if product.sku == line.sku), None)
+def quantity_options(line: LineValues, catalogue: tuple[Product, ...] | None = None) -> dict | None:
+    product = next((product for product in (PRODUCTS if catalogue is None else catalogue) if product.sku == line.sku), None)
     if product is None or line.quantity is None or line.quantity <= 0 or line.quantity_unit == "unknown":
         return None
     units = line.quantity * product.pack_size if line.quantity_unit == "case" else line.quantity
@@ -20,12 +21,13 @@ def quantity_options(line: LineValues) -> dict | None:
             "supplied_units": supplied_units, "extra_units": str(supplied_units - units)}
 
 
-def validate(values: DraftValues, customers: tuple[Customer, ...] = CUSTOMERS) -> dict:
+def validate(values: DraftValues, customers: tuple[Customer, ...] = CUSTOMERS, catalogue: tuple[Product, ...] | None = None) -> dict:
     issues = []
     lines = []
     stock = defaultdict(Decimal)
     total = Decimal("0.00")
-    products = {product.sku: product for product in PRODUCTS}
+    catalogue = PRODUCTS if catalogue is None else catalogue
+    products = {product.sku: product for product in catalogue}
 
     def issue(code, field, message, severity="blocker"):
         issues.append({"code": code, "field": field, "message": message, "severity": severity})
@@ -48,12 +50,12 @@ def validate(values: DraftValues, customers: tuple[Customer, ...] = CUSTOMERS) -
             issue("quantity_resolution_stale", field + ".quantity", "Product or quantity changed. Review the quantity decision again.")
         elif resolution and not resolution.reason:
             issue("quantity_reason", field + ".quantity", "Record a reason for the approved quantity change.")
-        candidates = [p.sku for p in PRODUCTS if line.requested_product.casefold() in
+        candidates = [p.sku for p in catalogue if line.requested_product.casefold() in
                       {p.sku.casefold(), p.name.casefold(), *(alias.casefold() for alias in p.aliases)}] if line.requested_product else []
         item = {"sku": line.sku, "name": product.name if product else None,
                 "candidates": candidates, "pack_size": product.pack_size if product else None,
                 "unit_price": str(product.price) if product else None, "cases": None, "line_total": None,
-                "quantity_suggestion": quantity_options(line)}
+                "quantity_suggestion": quantity_options(line, catalogue)}
         lines.append(item)
         if product is None:
             issue("product", field + ".sku", "Choose a catalogue product; ambiguous names require staff selection.")

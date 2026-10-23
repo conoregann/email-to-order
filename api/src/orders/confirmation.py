@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 from src.customers.service import workspace_customers
+from src.catalogue.service import workspace_products
 from src.orders.drafts import draft_values
 from src.orders.models import ConfirmedOrder, Draft
 from src.orders.validation import validate
@@ -19,7 +20,7 @@ def confirm_draft(db: Session, draft: Draft, version: int) -> None:
         raise HTTPException(409, "Draft changed. Reload and review the latest version before confirming.")
     values = draft_values(draft)
     customers = workspace_customers(db, draft.guest_id)
-    validation = validate(values, customers)
+    validation = validate(values, customers, workspace_products(db, draft.guest_id))
     if not validation["can_confirm"]:
         raise HTTPException(422, {"message": "Resolve all blocking issues before confirmation.", "validation": validation})
     now = int(time.time())

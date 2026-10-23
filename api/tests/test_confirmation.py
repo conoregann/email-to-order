@@ -60,11 +60,11 @@ def test_confirmation_ownership_and_required_header(guest, app):
 def test_confirm_revalidates_stock_and_freezes_snapshot(guest, monkeypatch):
     draft = ready(guest)
     changed = tuple(product.model_copy(update={"stock_cases": 0}) for product in PRODUCTS)
-    monkeypatch.setattr("src.orders.validation.PRODUCTS", changed)
+    monkeypatch.setattr("src.catalogue.service.PRODUCTS", changed)
     assert confirm(guest, draft).status_code == 422
-    monkeypatch.setattr("src.orders.validation.PRODUCTS", PRODUCTS)
+    monkeypatch.setattr("src.catalogue.service.PRODUCTS", PRODUCTS)
     order = confirm(guest, draft).json()["confirmed"]
-    monkeypatch.setattr("src.orders.validation.PRODUCTS", changed)
+    monkeypatch.setattr("src.catalogue.service.PRODUCTS", changed)
     assert guest.get(f"/api/orders/{draft['id']}").json()["confirmed"] == order
 
 

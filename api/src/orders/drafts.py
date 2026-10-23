@@ -8,6 +8,7 @@ from src.orders.schemas import CreateDraft, DraftValues, UpdateDraft
 from src.orders.service import SAMPLES
 from src.orders.validation import validate
 from src.customers.service import workspace_customers
+from src.catalogue.service import workspace_products
 
 # Saved manual values, not AI extraction. Addresses always require staff confirmation.
 SAMPLE_VALUES = {
@@ -41,7 +42,7 @@ def draft_response(db: Session, draft: Draft) -> dict:
             "source": draft.source, "extraction": draft.extraction,
             "extraction_status": draft.extraction_status, "extraction_attempt_id": draft.extraction_attempt_id,
             "extraction_error": draft.extraction_error, "extraction_message": MESSAGES.get(draft.extraction_error), "values": values.model_dump(mode="json"),
-            "validation": order.snapshot["validation"] if order else validate(values, workspace_customers(db, draft.guest_id)), "created_at": draft.created_at, "updated_at": draft.updated_at,
+            "validation": order.snapshot["validation"] if order else validate(values, workspace_customers(db, draft.guest_id), workspace_products(db, draft.guest_id)), "created_at": draft.created_at, "updated_at": draft.updated_at,
             "confirmed": order.snapshot if order else None}
 
 

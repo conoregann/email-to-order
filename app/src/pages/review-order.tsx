@@ -9,6 +9,7 @@ import { Button } from '../components/ui/button'
 import { Select } from '../components/ui/select'
 import { QuantityResolution } from '../components/quantity-resolution'
 import { AddCustomer } from '../components/add-customer'
+import { AddProduct } from '../components/add-product'
 import { editOrderLine } from '../lib/quantity-resolution'
 import { sendJson } from '../lib/api'
 import { availableStep, canContinueReview, initialProgress, reviewReducer, type ReviewStep } from '../lib/review-flow'
@@ -26,11 +27,11 @@ export function ReviewOrder() {
   if (resource.state.status !== 'ready' || customers.state.status !== 'ready' || products.state.status !== 'ready') return <p role="status">Loading order…</p>
   if (resource.state.data.status === 'confirmed') return <Navigate to={`/orders/${orderId}/confirmed`} replace />
   return <><PageHeading title="Review order" action={<Link className="back-link" to="/orders">Back to orders</Link>} />
-    <DraftEditor key={resource.state.data.id} order={resource.state.data} customers={customers.state.data} onCustomersChange={customers.setData} products={products.state.data} onSave={resource.setData} onReload={resource.reload} />
+    <DraftEditor key={resource.state.data.id} order={resource.state.data} customers={customers.state.data} onCustomersChange={customers.setData} products={products.state.data} onProductsChange={products.setData} onSave={resource.setData} onReload={resource.reload} />
   </>
 }
 
-function DraftEditor({ order, customers, onCustomersChange, products, onSave, onReload }: { order: Order; customers: Customer[]; onCustomersChange: (customers: Customer[]) => void; products: Product[]; onSave: (order: Order) => void; onReload: () => void }) {
+function DraftEditor({ order, customers, onCustomersChange, products, onProductsChange, onSave, onReload }: { order: Order; customers: Customer[]; onCustomersChange: (customers: Customer[]) => void; products: Product[]; onProductsChange: (products: Product[]) => void; onSave: (order: Order) => void; onReload: () => void }) {
   const [values, setValues] = useState<Values>(() => structuredClone(order.values))
   const [lineApprovals, setLineApprovals] = useState(() => order.values.lines.map(() => false))
   const [progress, dispatch] = useReducer(reviewReducer, initialProgress)
@@ -132,12 +133,13 @@ function DraftEditor({ order, customers, onCustomersChange, products, onSave, on
             <label htmlFor={`requested-${index}`}>Requested in email</label><input id={`requested-${index}`} maxLength={300} value={line.requested_product} onChange={event => updateLine(index, { requested_product: event.target.value, match_confirmed: false })} />
             {line.requested_product === order.values.lines[index]?.requested_product && !line.sku && (order.validation.lines[index]?.candidates.length ?? 0) > 0 && <p className="notice">Possible matches: {order.validation.lines[index].candidates.join(', ')}</p>}
             <label htmlFor={`product-${index}`}>Catalogue product</label><Select id={`product-${index}`} value={line.sku ?? ''} disabled={locked} placeholder="Select exact product" clearLabel="Clear product" options={products.map(product => ({ value: product.sku, label: `${product.name} · ${product.pack_size} per case · ${product.sku}` }))} onChange={value => updateLine(index, { sku: value || null, match_confirmed: false })} />
+            <AddProduct index={index} name={line.requested_product} disabled={locked} onBusy={setBusy} onCreated={product => { onProductsChange([...products, product]); updateLine(index, { sku: product.sku, match_confirmed: false }) }} />
             {product && <p className="product-facts">{money(product.price)} / case · {product.pack_size} units / case · {product.stock_cases} cases in simulated stock</p>}
             <div className="quantity-grid"><div><label htmlFor={`quantity-${index}`}>Quantity</label><div className="quantity-control"><button type="button" aria-label={`Decrease quantity for product ${index + 1}`} disabled={Number(line.quantity) <= 1} onClick={() => updateLine(index, { quantity: String(Math.max(1, Number(line.quantity || 0) - 1)), match_confirmed: false })}><MinusIcon /></button><input id={`quantity-${index}`} type="number" min="1" step="1" value={line.quantity ?? ''} onChange={event => updateLine(index, { quantity: event.target.value || null, match_confirmed: false })} /><button type="button" aria-label={`Increase quantity for product ${index + 1}`} onClick={() => updateLine(index, { quantity: String(Number(line.quantity || 0) + 1), match_confirmed: false })}><PlusIcon /></button></div></div><div><label htmlFor={`unit-${index}`}>Unit</label><Select id={`unit-${index}`} value={line.quantity_unit} disabled={locked} placeholder="Choose unit" options={[{ value: 'unknown', label: 'Choose unit' }, { value: 'case', label: 'Cases' }, { value: 'unit', label: 'Individual units' }]} onChange={value => updateLine(index, { quantity_unit: value as Line['quantity_unit'], match_confirmed: false })} /></div></div>
             <QuantityResolution orderId={order.id} index={index} line={line} disabled={locked} onChange={patch => updateLine(index, patch)} />
             <label className="checkbox review-approval"><input type="checkbox" checked={!!lineApprovals[index] && line.match_confirmed} disabled={!product || !(Number(line.quantity) > 0) || line.quantity_unit === 'unknown' || (!!line.quantity_resolution && line.quantity_resolution.status !== 'adjusted')} onChange={event => updateLine(index, { match_confirmed: event.target.checked })} /><span>{line.quantity_resolution?.status === 'adjusted' ? 'Product and approved quantity are correct.' : 'Product and quantity match the email.'}</span></label>
           </div>
-        })}<Button variant="secondary" type="button" disabled={values.lines.length >= 50} onClick={() => { setValues({ ...values, lines: [...values.lines, { requested_product: '', sku: null, match_confirmed: false, quantity: null, quantity_unit: 'unknown' }] }); setLineApprovals([...lineApprovals, false]); dispatch({ type: 'invalidate', step: 2 }) }}>Add product</Button>
+        })}<Button variant="secondary" type="button" disabled={values.lines.length >= 50} onClick={() => { setValues({ ...values, lines: [...values.lines, { requested_product: '', sku: null, match_confirmed: false, quantity: null, quantity_unit: 'unknown' }] }); setLineApprovals([...lineApprovals, false]); dispatch({ type: 'invalidate', step: 2 }) }}>Add order line</Button>
           {next(dirty ? 'Save & check' : 'Review checks')}
         </fieldset>
       </ReviewSection>

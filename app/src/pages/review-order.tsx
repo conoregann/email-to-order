@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { PageHeading } from '../components/page-heading'
 import { ExtractionControls } from '../components/extraction-controls'
 import { ErrorNotice } from '../components/error-notice'
 import { Button } from '../components/ui/button'
@@ -18,7 +19,7 @@ export function ReviewOrder() {
   }
   if (resource.state.status !== 'ready' || customers.state.status !== 'ready' || products.state.status !== 'ready') return <p role="status">Loading order and catalogue…</p>
   if (resource.state.data.status === 'confirmed') return <Navigate to={`/orders/${orderId}/confirmed`} replace />
-  return <><div className="heading"><div><p className="eyebrow">REVIEW ORDER</p><h1>Check the details</h1></div><Link to="/orders">Back to orders</Link></div>
+  return <><PageHeading eyebrow="REVIEW ORDER" title="Check the details" description="Compare the draft with the original email before confirming." action={<Link className="back-link" to="/orders">← Back to orders</Link>} />
     {message && <p role="status" className="notice success">{message}</p>}
     <DraftEditor key={`${resource.state.data.id}:${resource.state.data.version}`} order={resource.state.data} customers={customers.state.data} products={products.state.data} onSave={order => { resource.setData(order); setMessage('Draft saved. Checks are up to date.') }} onReload={resource.reload} />
   </>
@@ -62,13 +63,13 @@ function DraftEditor({ order, customers, products, onSave, onReload }: { order: 
           <button type="button" className="text-button" onClick={() => setValues({ ...values, lines: values.lines.filter((_, i) => i !== index) })}>Remove line {index + 1}</button>
         </div>
       })}
-      <Button type="button" disabled={values.lines.length >= 50} onClick={() => setValues({ ...values, lines: [...values.lines, { requested_product: '', sku: null, match_confirmed: false, quantity: null, quantity_unit: 'unknown' }] })}>Add product line</Button>
+      <Button variant="secondary" type="button" disabled={values.lines.length >= 50} onClick={() => setValues({ ...values, lines: [...values.lines, { requested_product: '', sku: null, match_confirmed: false, quantity: null, quantity_unit: 'unknown' }] })}>Add product line</Button>
     </fieldset>
     <div className="checks" aria-live="polite"><h2>Order checks</h2>{dirty ? <p className="notice">Unsaved changes. Save the draft to refresh checks and totals.</p> : <>
       {order.validation.issues.length ? <ul>{order.validation.issues.map((issue, index) => <li key={index} className={issue.severity}><strong>{issue.severity === 'blocker' ? 'Blocking issue' : 'Warning'}</strong>: {issue.field.startsWith('lines.') ? `Line ${Number(issue.field.split('.')[1]) + 1}: ` : ''}{issue.message}</li>)}</ul> : <p className="notice success">All checks passed. Ready to confirm.</p>}
       <p className="total">{order.validation.can_confirm ? 'Total' : 'Current calculated total'}: {money(order.validation.total)}</p></>}
     </div>
-    {error != null && <ErrorNotice error={error} />}<div className="actions"><Button disabled={busy || extracting || !dirty} onClick={save}>{busy ? 'Working…' : 'Save draft & check'}</Button><Button disabled={busy || extracting || dirty || !order.validation.can_confirm} onClick={confirm}>Confirm order</Button><button type="button" disabled={busy || extracting} className="text-button" onClick={() => { if (!dirty || window.confirm('Discard unsaved changes and reload this draft?')) onReload() }}>Reload saved draft</button></div>
+    {error != null && <ErrorNotice error={error} />}<div className="actions"><Button variant="secondary" disabled={busy || extracting || !dirty} onClick={save}>{busy ? 'Working…' : 'Save draft & check'}</Button><Button disabled={busy || extracting || dirty || !order.validation.can_confirm} onClick={confirm}>Confirm order</Button><button type="button" disabled={busy || extracting} className="text-button" onClick={() => { if (!dirty || window.confirm('Discard unsaved changes and reload this draft?')) onReload() }}>Reload saved draft</button></div>
     <p>Confirmation rechecks the order. Stock is simulated and is not reserved. No email will be sent.</p>
     </section></div>
 }

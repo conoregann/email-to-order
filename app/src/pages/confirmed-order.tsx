@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import { PageHeading } from '../components/page-heading'
 import { ErrorNotice } from '../components/error-notice'
 import { Button } from '../components/ui/button'
 import { useResource } from '../lib/use-resource'
@@ -11,7 +12,7 @@ export function ConfirmedOrder() {
   if (state.status === 'error') return <ErrorNotice error={state.error} retry={reload} />
   const order = state.data.confirmed
   if (!order) return <section><h1>This order is still a draft</h1><Link to={`/orders/${orderId}/review`}>Continue reviewing</Link></section>
-  return <><p className="eyebrow">ORDER CONFIRMED</p><h1>{order.number}</h1><p>Confirmed orders are read-only. This demo does not send email or reserve stock.</p><section><h2>{order.customer.name}</h2><p className="preserve-text">{order.values.delivery_address}</p>
+  return <><PageHeading eyebrow="ORDER CONFIRMED" title={order.number} description="Confirmed orders are read-only. This demo does not send email or reserve stock." /><section><h2>{order.customer.name}</h2><p className="preserve-text">{order.values.delivery_address}</p>
     <div className="table-scroll"><table><caption>Approved order lines</caption><thead><tr><th>Product</th><th>Cases</th><th>Units per case</th><th>Price per case</th><th>Total</th></tr></thead><tbody>{order.validation.lines.map((line, index) => <tr key={index}><td>{line.name}<br /><small>{line.sku}</small></td><td>{line.cases}</td><td>{line.pack_size}</td><td>{money(line.unit_price!)}</td><td>{money(line.line_total!)}</td></tr>)}</tbody></table></div><p className="total">Total: {money(order.validation.total)}</p>
     {order.values.requested_delivery_date && <p>Requested delivery: {order.values.requested_delivery_date} — not guaranteed.</p>}
     <h2>Simulated confirmation email</h2><pre className="preview">{order.confirmation_preview}</pre>

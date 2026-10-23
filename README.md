@@ -113,6 +113,8 @@ Two customers, saved addresses, four products and five sample scenarios remain i
 - Browser mutations require a custom request header. Secrets are never exposed through Vite variables.
 - Backend checks require a known customer, reviewed catalogue products, positive quantities, whole cases, a supplied and explicitly approved address, and sufficient simulated stock across all duplicate SKU lines.
 - Saved address selection replaces the field only after a staff action, and resets approval. Staff must resolve any conflict with the original email.
+- Partial-case lines show a backend-calculated whole-case option, including extra units. Staff must explicitly apply the correction and review the product again. **Needs customer clarification** keeps the draft blocked and appears in order history after saving.
+- Quantity decisions retain the original quantity/unit, approved quantity/product and reason in the saved line and confirmed snapshot. Editing the product, quantity or unit requires a fresh decision. Original emails and initial draft values remain unchanged.
 - Catalogue prices determine totals using Decimal arithmetic. Client-supplied prices are rejected. Requests are limited to 20,000 email characters, 50 lines and bounded field sizes.
 - Draft saves use version checks. Unsaved edits disable confirmation; stale saves and confirmations return a conflict for review.
 - Confirmation revalidates on the backend and uses a transactional state change plus a unique draft-to-order relationship. Concurrent requests and retries return one order.
@@ -136,7 +138,7 @@ TEST_DATABASE_URL='postgresql+psycopg://user:password@localhost/test_database' \
 
 The test user needs permission to create and drop schemas. Each database-backed test uses an isolated schema. GitHub Actions runs frontend checks and backend tests with SQLite and PostgreSQL 16.
 
-The 85-test suite covers extraction contracts, matching, SDK transport behavior, durable usage caps, failure recovery, extraction/save/confirmation races, provenance, migrations, ownership, expiration, durable drafts, version conflicts, catalogue pricing, quantities, duplicate-line stock checks, concurrent confirmation and immutable snapshots. See [verification notes](docs/verification.md) for browser scenarios and evidence.
+The 102-test backend suite covers extraction contracts, matching, SDK transport behavior, durable usage caps, failure recovery, extraction/save/confirmation races, provenance, migrations, ownership, expiration, durable drafts, version conflicts, catalogue pricing, quantities, duplicate-line stock checks, concurrent confirmation and immutable snapshots. See [verification notes](docs/verification.md) for browser scenarios and evidence.
 
 ## Remaining work and limitations
 

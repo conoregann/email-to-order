@@ -79,3 +79,17 @@ Screenshots were visually inspected:
 - [Mobile review](screenshots/review-mobile.png)
 
 Browser fault injection was temporary and is not part of application code. No live AI, Neon account, public hosting, or email delivery was used.
+
+
+## Quantity-resolution milestone — 23 October 2026
+
+- All 102 backend tests passed on SQLite; frontend lint, all 16 frontend tests and the production build passed. PostgreSQL was not rerun for this milestone. No migration is required: optional resolution metadata is stored in the existing line JSON; older lines and confirmed snapshots remain readable.
+- Backend tests cover exact multiples, fractional cases/units, unknown units/products, positive-quantity requirements, whole-case suggestions, stock limits, stale approval decisions, authenticated/nonmutating previews, persisted clarification and immutable confirmed resolution records.
+- Frontend tests cover preserving the first quantity request, resetting product approval on edits, retaining an explicit whole-case decision, invalidating decisions after product/quantity/unit edits, normal entry of new lines, and preventing unresolved decisions from passing product review.
+- Browser verification used the real built frontend and API with an isolated SQLite database, live extraction disabled and the fictional 75-cup sample. At desktop width, the product step displayed 75 units requested, 50 per case, 2 cases/100 units and 25 extra.
+- Marked the sample **Needs customer clarification**, saved it, verified **Needs clarification** in order history and reopened it. The pending decision persisted, with product approval and continuation disabled.
+- At 390px mobile width, entered a reason, explicitly used 2 cases/100 units, verified product approval reset, approved the product, saved, passed validation and confirmed for EUR 11.00. Automated API tests also verify the original 75-unit request and resolution reason remain in the confirmed snapshot.
+
+Reproduce: select **Quantity and pack size**, create the saved-example draft, review customer/delivery, and open Products. Either save a clarification decision or record a note and use the whole-case option. Recheck the product before saving and confirming. For a manually entered corrected quantity, add a reason and use **Approve quantity change**.
+
+Desktop evidence: [quantity-resolution panel](screenshots/quantity-resolution-desktop.png).

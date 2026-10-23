@@ -145,7 +145,7 @@ th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); }
 .mix-drafts { background: #2d4033; }
 .mix-confirmed { background: #829976; }
 .mix-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 0.8125rem; margin-top: auto; }
-.mix-legend > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mix-legend > div { display: flex; align-items: center; gap: 8px; }
 .mix-legend dt::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #2d4033; margin-right: 7px; }
 .mix-legend > div:last-child dt::before { background: #829976; }
 .mix-legend dd { font-weight: 600; }

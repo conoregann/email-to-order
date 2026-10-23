@@ -29,3 +29,22 @@ def test_concurrent_durable_caps(app, monkeypatch, same_guest, expected):
         lock_usage(db)
         reserve(db, "guest", "draft", str(uuid4()), 86401 + 86400)
         db.commit()
+
+
+def test_guest_deletion_does_not_refund_global_cap(guest, app, monkeypatch):
+    from src.auth.models import GuestSession
+    from sqlalchemy import delete
+    monkeypatch.setattr(settings, "extraction_daily_limit", 1)
+    with app.state.sessions() as db:
+        owner = db.scalar(select(GuestSession))
+        lock_usage(db)
+        reserve(db, owner.id, "draft", str(uuid4()), 100000)
+        db.commit()
+        db.execute(delete(GuestSession).where(GuestSession.id == owner.id))
+        db.commit()
+    with app.state.sessions() as db:
+        lock_usage(db)
+        with pytest.raises(ExtractionError) as exc:
+            reserve(db, "new-workspace", "draft", str(uuid4()), 100001)
+        assert exc.value.code == "daily_limit"
+        db.rollback()

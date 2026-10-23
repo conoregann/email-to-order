@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal
 import re
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class FactModel(BaseModel):
@@ -26,9 +26,17 @@ class Extraction(FactModel):
     requested_delivery_date: date | None
     lines: list[ExtractedLine] = Field(max_length=50)
 
+    @field_validator("requested_delivery_date", mode="before")
+    @classmethod
+    def iso_date(cls, value):
+        if value is not None and not (type(value) is date or
+                isinstance(value, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", value)):
+            raise ValueError("Dates must be ISO calendar dates, not timestamps")
+        return value
+
     @model_validator(mode="after")
     def absolute_date_only(self):
-        if self.requested_delivery_date and (not self.requested_date_text.strip() or re.search(
+        if self.requested_delivery_date and (str(self.requested_delivery_date.year) not in self.requested_date_text or re.search(
             r"\b(today|tomorrow|yesterday|next|this|in \d+ days?)\b", self.requested_date_text, re.I
         )):
             raise ValueError("Relative dates have no trusted source timestamp")

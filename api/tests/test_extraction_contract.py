@@ -15,6 +15,8 @@ def test_empty_unknowns_are_valid():
 @pytest.mark.parametrize("patch", [
     {"price": "1"}, {"match_confirmed": True}, {"stock": 100},
     {"requested_delivery_date": "2026-02-30"},
+    {"requested_delivery_date": 0},
+    {"requested_delivery_date": "2026-10-24", "requested_date_text": "Friday"},
     {"requested_delivery_date": "2026-10-24", "requested_date_text": "tomorrow"},
 ])
 def test_invalid_facts(patch):

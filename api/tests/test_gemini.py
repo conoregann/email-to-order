@@ -81,3 +81,50 @@ def test_disabled_never_calls(monkeypatch):
     with pytest.raises(gemini.ExtractionError, match="unavailable"):
         asyncio.run(gemini.extract("fictional email"))
     generate.assert_not_called()
+
+
+@pytest.mark.parametrize("status,code", [(200, None), (429, "provider_quota"), (503, "provider_error")])
+def test_actual_sdk_transport_and_no_retries(enabled, monkeypatch, status, code):
+    import json
+    import httpx
+    calls = []
+    async def handle(request):
+        calls.append(json.loads(request.content))
+        if status != 200:
+            return httpx.Response(status, json={"error": {"message": "private provider detail"}})
+        return httpx.Response(200, json={"candidates": [{"content": {"parts": [{"text": Extraction(**FACTS).model_dump_json()}],
+            "role": "model"}, "finishReason": "STOP"}]})
+    real_client = gemini.genai.Client
+    def client(**kwargs):
+        kwargs["http_options"].async_client_args = {"transport": httpx.MockTransport(handle)}
+        return real_client(**kwargs)
+    monkeypatch.setattr(gemini.genai, "Client", client)
+    if code:
+        with pytest.raises(gemini.ExtractionError) as exc:
+            asyncio.run(gemini.extract("fictional email"))
+        assert exc.value.code == code
+    else:
+        assert asyncio.run(gemini.extract("fictional email")).customer_name == "Harbour Cafe"
+    assert len(calls) == 1
+    assert calls[0]["generationConfig"]["responseJsonSchema"]["additionalProperties"] is False
+    assert calls[0]["generationConfig"]["maxOutputTokens"] == 8192
+
+
+def test_total_call_deadline(enabled, monkeypatch):
+    monkeypatch.setattr(settings, "extraction_timeout_seconds", 1)
+    async def slow(*args, **kwargs):
+        await asyncio.sleep(5)
+    generate = fake_client(monkeypatch)
+    generate.side_effect = slow
+    with pytest.raises(gemini.ExtractionError) as exc:
+        asyncio.run(gemini.extract("fictional email"))
+    assert exc.value.code == "timeout"
+
+
+def test_absolute_date_requires_original_source_text(enabled, monkeypatch):
+    facts = Extraction(**(FACTS | {"requested_date_text": "24 October 2026", "requested_delivery_date": "2026-10-24"}))
+    fake_client(monkeypatch, response(facts.model_dump_json()))
+    with pytest.raises(gemini.ExtractionError) as exc:
+        asyncio.run(gemini.extract("Please deliver tomorrow"))
+    assert exc.value.code == "invalid_output"
+    assert asyncio.run(gemini.extract("Please deliver on 24 October 2026")).requested_delivery_date.isoformat() == "2026-10-24"

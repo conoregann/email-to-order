@@ -85,7 +85,7 @@ async def extract_draft(db: Session, guest_id: str, draft_id: str, payload: Extr
         data = values.model_dump(mode="json")
         state = dict(extraction_status="succeeded", extraction_error=None, source="ai_suggestion",
                      extraction={"facts": facts.model_dump(mode="json"), "model": model,
-                                 "prompt_version": gemini.PROMPT_VERSION, "extracted_at": now},
+                                 "prompt_version": gemini.PROMPT_VERSION, "extracted_at": now, "attempt_id": attempt_id},
                      initial_values=data, values=values.model_dump(mode="json", exclude={"lines"}),
                      version=payload.version + 1, updated_at=now)
     changed = db.execute(update(Draft).where(Draft.id == draft.id, Draft.version == payload.version,

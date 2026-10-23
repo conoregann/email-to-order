@@ -68,7 +68,10 @@ async def extract(email: str) -> Extraction:
         body = response.text
         if not body or len(body.encode("utf-8")) > 64000:
             raise ExtractionError("invalid_output")
-        return Extraction.model_validate_json(body)
+        facts = Extraction.model_validate_json(body)
+        if facts.requested_delivery_date and facts.requested_date_text.casefold() not in email.casefold():
+            raise ExtractionError("invalid_output")
+        return facts
     except (TimeoutError, httpx.TimeoutException):
         raise ExtractionError("timeout") from None
     except ValidationError:

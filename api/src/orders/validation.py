@@ -1,8 +1,22 @@
 from collections import defaultdict
-from decimal import Decimal
+from decimal import Decimal, ROUND_CEILING
 from src.catalogue.service import PRODUCTS
 from src.customers.service import CUSTOMERS
-from src.orders.schemas import DraftValues
+from src.orders.schemas import DraftValues, LineValues
+
+
+def quantity_options(line: LineValues) -> dict | None:
+    product = next((product for product in PRODUCTS if product.sku == line.sku), None)
+    if product is None or line.quantity is None or line.quantity <= 0 or line.quantity_unit == "unknown":
+        return None
+    units = line.quantity * product.pack_size if line.quantity_unit == "case" else line.quantity
+    cases = units / product.pack_size
+    if cases == cases.to_integral_value():
+        return None
+    whole_cases = int(cases.to_integral_value(rounding=ROUND_CEILING))
+    supplied_units = whole_cases * product.pack_size
+    return {"requested_units": str(units), "pack_size": product.pack_size, "cases": whole_cases,
+            "supplied_units": supplied_units, "extra_units": str(supplied_units - units)}
 
 
 def validate(values: DraftValues) -> dict:
@@ -26,11 +40,19 @@ def validate(values: DraftValues) -> dict:
     for index, line in enumerate(values.lines):
         field = f"lines.{index}"
         product = products.get(line.sku)
+        resolution = line.quantity_resolution
+        if resolution and resolution.status != "adjusted":
+            issue("quantity_clarification", field + ".quantity", "Quantity needs customer clarification." if resolution.status == "needs_clarification" else "Review and approve the quantity change.")
+        elif resolution and (resolution.approved_quantity != line.quantity or resolution.approved_unit != line.quantity_unit or resolution.approved_sku != line.sku):
+            issue("quantity_resolution_stale", field + ".quantity", "Product or quantity changed. Review the quantity decision again.")
+        elif resolution and not resolution.reason:
+            issue("quantity_reason", field + ".quantity", "Record a reason for the approved quantity change.")
         candidates = [p.sku for p in PRODUCTS if line.requested_product.casefold() in
                       {p.sku.casefold(), p.name.casefold(), *(alias.casefold() for alias in p.aliases)}] if line.requested_product else []
         item = {"sku": line.sku, "name": product.name if product else None,
                 "candidates": candidates, "pack_size": product.pack_size if product else None,
-                "unit_price": str(product.price) if product else None, "cases": None, "line_total": None}
+                "unit_price": str(product.price) if product else None, "cases": None, "line_total": None,
+                "quantity_suggestion": quantity_options(line)}
         lines.append(item)
         if product is None:
             issue("product", field + ".sku", "Choose a catalogue product; ambiguous names require staff selection.")
@@ -47,7 +69,7 @@ def validate(values: DraftValues) -> dict:
             continue
         cases = quantity if line.quantity_unit == "case" else quantity / product.pack_size
         if cases != cases.to_integral_value():
-            issue("pack_size", field + ".quantity", f"Use whole cases of {product.pack_size} units; partial cases are outside this demo.")
+            issue("pack_size", field + ".quantity", f"Sold in whole cases of {product.pack_size} units. Approve a whole-case quantity or mark this line for customer clarification.")
             continue
         stock[product.sku] += cases
         amount = (cases * product.price).quantize(Decimal("0.01"))

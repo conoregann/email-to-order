@@ -6,9 +6,10 @@ from src.auth.service import current_guest, require_browser_header
 from src.database import get_db
 from src.orders.drafts import create_draft, draft_response, owned_draft, save_draft, apply_saved_example
 from src.orders.models import Draft, ExtractionAttempt
-from src.orders.schemas import CreateDraft, SampleEmail, UpdateDraft, ConfirmDraft
+from src.orders.schemas import CreateDraft, SampleEmail, UpdateDraft, ConfirmDraft, LineValues
 from src.orders.confirmation import confirm_draft
 from src.orders.service import list_samples
+from src.orders.validation import quantity_options
 from src.integrations.gemini import available
 from src.orders.extraction import ExtractDraft, extract_draft
 
@@ -57,3 +58,9 @@ def confirm_order(draft_id: str, payload: ConfirmDraft, guest: GuestSession = De
 @router.post("/{draft_id}/saved-example", dependencies=[Depends(require_browser_header)])
 def saved_example(draft_id: str, payload: ConfirmDraft, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):
     return draft_response(db, apply_saved_example(db, owned_draft(db, guest.id, draft_id), payload.version))
+
+
+@router.post("/{draft_id}/quantity-options", dependencies=[Depends(require_browser_header)])
+def preview_quantity(draft_id: str, payload: LineValues, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):
+    owned_draft(db, guest.id, draft_id)
+    return {"suggestion": quantity_options(payload)}

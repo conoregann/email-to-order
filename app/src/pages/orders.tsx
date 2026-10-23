@@ -23,13 +23,14 @@ function OrderRow({ order, customers }: { order: Order; customers: Customer[] })
   const confirmed = order.status === 'confirmed'
   const blockers = order.validation.issues.filter(issue => issue.severity === 'blocker').length
   const customer = order.confirmed?.customer.name ?? customers.find(customer => customer.id === order.values.customer_id)?.name ?? (order.values.customer_id ? 'Customer' : 'Customer not selected')
+  const clarifications = order.values.lines.filter(line => line.quantity_resolution?.status === 'needs_clarification').length
   const firstLine = order.values.lines[0]
   const destination = `/orders/${order.id}/${confirmed ? 'confirmed' : 'review'}`
   return <article className="order-row">
     <div className="order-details"><div className="order-identity"><h3><Link to={destination}>{customer}</Link></h3></div><p>{order.confirmed?.number ?? order.id.slice(0, 8)} · {new Date(order.created_at * 1000).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' })}</p></div>
     <div className="order-products"><strong>{order.validation.lines[0]?.name || firstLine?.requested_product || 'No product selected'}</strong><span>{firstLine ? `${firstLine.quantity ?? '—'} ${firstLine.quantity_unit === 'case' ? 'cases' : firstLine.quantity_unit === 'unit' ? 'units' : '· unit needed'}` : 'Add a product'}{order.values.lines.length > 1 && ` · +${order.values.lines.length - 1} more`}</span></div>
     <span className={`order-status badge ${order.status}`}>{confirmed ? 'Confirmed' : 'Draft'}</span>
-    <div className="order-amount"><strong>{money(order.validation.total)}</strong>{!confirmed && <p className={blockers ? 'blocker' : ''}>{blockers ? `${blockers} to resolve` : order.validation.can_confirm ? 'Ready to confirm' : 'Review needed'}</p>}</div>
+    <div className="order-amount"><strong>{money(order.validation.total)}</strong>{!confirmed && <p className={blockers ? 'blocker' : ''}>{clarifications ? 'Needs clarification' : blockers ? `${blockers} to resolve` : order.validation.can_confirm ? 'Ready to confirm' : 'Review needed'}</p>}</div>
     <Button asChild variant="secondary"><Link to={destination} aria-label={`${confirmed ? 'View' : 'Review'} ${order.confirmed?.number ?? `draft ${order.id.slice(0, 8)}`}`}>{confirmed ? 'View order' : 'Review draft'} <span aria-hidden="true">→</span></Link></Button>
   </article>
 }

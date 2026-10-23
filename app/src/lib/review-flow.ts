@@ -27,6 +27,7 @@ export function canContinueReview(step: ReviewStep, values: Values, customers: C
   if (step === 1) return !!values.delivery_address.trim() && values.delivery_confirmed
   if (step === 2) return values.lines.length > 0 && values.lines.every(line =>
     products.some(product => product.sku === line.sku) && line.match_confirmed &&
-    Number.isFinite(Number(line.quantity)) && Number(line.quantity) > 0 && line.quantity_unit !== 'unknown')
+    Number.isFinite(Number(line.quantity)) && Number(line.quantity) > 0 && line.quantity_unit !== 'unknown' &&
+    (!line.quantity_resolution || (line.quantity_resolution.status === 'adjusted' && !!line.quantity_resolution.reason.trim())))
   return false
 }

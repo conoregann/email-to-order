@@ -306,3 +306,8 @@ kbd { font-family: inherit; font-size: inherit; border: 1px solid var(--border);
 .quantity-control input { appearance: textfield; border: 0; padding: 8px 0; min-width: 0; min-height: 44px; width: 100%; margin: 0; background: transparent; text-align: center; font-size: 1.125rem; font-variant-numeric: tabular-nums; }
 .quantity-control input::-webkit-inner-spin-button, .quantity-control input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 @media (max-width: 40rem) { .heading > div { flex-basis: 0; } }
+
+.quantity-resolution { margin: 0 0 20px; padding: 16px; border: 1px solid var(--field-border); border-radius: 16px; background: var(--surface-alt); }
+.quantity-resolution p { margin: 0 0 12px; font-size: 0.875rem; line-height: 1.6; overflow-wrap: anywhere; }
+.quantity-decisions { display: flex; flex-wrap: wrap; gap: 10px; }
+.quantity-decisions .button { white-space: normal; text-align: center; }

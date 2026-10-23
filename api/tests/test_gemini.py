@@ -1,4 +1,5 @@
 import asyncio
+import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 import pytest
@@ -48,6 +49,7 @@ def test_structured_provider_call(enabled, monkeypatch):
     assert config.automatic_function_calling.disable
     assert config.max_output_tokens == 8192
     assert config.response_json_schema["additionalProperties"] is False
+    assert "maxItems" not in config.response_json_schema["properties"]["lines"]
 
 
 @pytest.mark.parametrize("body,reason,code", [
@@ -56,6 +58,7 @@ def test_structured_provider_call(enabled, monkeypatch):
     ("x" * 64001, types.FinishReason.STOP, "invalid_output"),
     ("", types.FinishReason.SAFETY, "refused"),
     ("{}", types.FinishReason.MAX_TOKENS, "invalid_output"),
+    (json.dumps({**FACTS, "lines": FACTS["lines"] * 51}), types.FinishReason.STOP, "invalid_output"),
 ])
 def test_invalid_responses(enabled, monkeypatch, body, reason, code):
     fake_client(monkeypatch, response(body, reason))

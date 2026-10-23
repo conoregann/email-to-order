@@ -45,6 +45,9 @@ async def extract(email: str) -> Extraction:
         raise ExtractionError("unavailable")
     if not email.strip() or len(email) > 20000:
         raise ExtractionError("invalid_output")
+    schema = Extraction.model_json_schema(mode="serialization")
+    # Avoid Gemini's constrained-decoding complexity limit; validate the 50-line cap locally.
+    del schema["properties"]["lines"]["maxItems"]
     try:
         async with genai.Client(api_key=settings.gemini_api_key, http_options=types.HttpOptions(
             timeout=settings.extraction_timeout_seconds * 1000,
@@ -54,7 +57,7 @@ async def extract(email: str) -> Extraction:
                 model=settings.gemini_model, contents=email,
                 config=types.GenerateContentConfig(
                     system_instruction=PROMPT, response_mime_type="application/json",
-                    response_json_schema=Extraction.model_json_schema(mode="serialization"),
+                    response_json_schema=schema,
                     max_output_tokens=8192, tools=[],
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                 )), timeout=settings.extraction_timeout_seconds)

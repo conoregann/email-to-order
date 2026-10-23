@@ -38,9 +38,9 @@ export function NewOrder() {
   return <><PageHeading eyebrow="NEW ORDER" title="Start with an email" description="Choose a fictional example or paste fictional customer email text." action={<Link className="back-link" to="/orders">← Back to orders</Link>} /><section>
     <label htmlFor="sample">Sample email</label>
     {state.status === 'loading' ? <p role="status">Loading sample emails…</p> : state.status === 'error' ? <ErrorNotice error={state.error} retry={reload} /> : <select id="sample" disabled={busy || !!created} value={selected} onChange={event => { setSelected(event.target.value); setEmail(state.data.find(sample => sample.id === event.target.value)?.body ?? '') }}><option value="">Choose a sample</option>{state.data.map(sample => <option key={sample.id} value={sample.id}>{sample.title}</option>)}</select>}
-    <label htmlFor="email">Customer email</label><textarea id="email" rows={12} maxLength={20000} disabled={busy || !!created} value={email} onChange={event => { setEmail(event.target.value); setSelected('') }} placeholder="Paste fictional customer email text here" />
-    <p>Manual entry starts with blank fields. Saved examples use labelled stored values and do not contact AI.</p>
-    {config.state.status === 'ready' && config.state.data.enabled ? <p>Live extraction sends this email text to Google Gemini. Use fictional data only. AI suggestions require your review.</p> : <p>Live extraction is unavailable. Manual entry and saved examples remain available.</p>}
+    <label htmlFor="email">Customer email</label><textarea id="email" rows={8} maxLength={20000} disabled={busy || !!created} value={email} onChange={event => { setEmail(event.target.value); setSelected('') }} placeholder="Paste fictional customer email text here" />
+    <p className="form-help">Manual entry starts with blank fields. Saved examples use labelled stored values and do not contact AI.</p>
+    {config.state.status === 'ready' && config.state.data.enabled ? <p className="form-help">Live extraction sends this email text to Google Gemini. Use fictional data only. AI suggestions require your review.</p> : <p className="form-help">Live extraction is unavailable. Manual entry and saved examples remain available.</p>}
     {created && <p role="status">Your email is saved. <Link to={`/orders/${created.id}/review`}>Open this draft to review, retry or continue manually</Link>.</p>}
     {busy && <p role="status">{created ? 'Extracting order suggestions…' : 'Saving email…'}</p>}
     {error != null && <ErrorNotice error={error} />}

@@ -122,6 +122,7 @@ Two customers, saved addresses, four products and five sample scenarios remain i
 
 ```sh
 npm --prefix app run lint
+npm --prefix app test
 npm --prefix app run build
 .venv/bin/python -m pytest api/tests -c api/pyproject.toml
 ```

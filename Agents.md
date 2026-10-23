@@ -1,8 +1,12 @@
-Behavioural guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+# Behavioural guidelines to reduce common LLM coding mistakes&#46;
 
-Tradeoff: These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+Merge with project-specific instructions as needed.
 
-1. Think Before Coding
+Tradeoff: These guidelines bias toward caution over speed. For trivial tasks,
+use judgment.
+
+## 1. Think Before Coding
+
 Don't assume. Don't hide confusion. Surface tradeoffs.
 
 Before implementing:
@@ -12,7 +16,8 @@ Before implementing:
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
 
-2. Simplicity First
+## 2. Simplicity First
+
 Minimum code that solves the problem. Nothing speculative.
 
 - No features beyond what was asked.
@@ -20,9 +25,11 @@ Minimum code that solves the problem. Nothing speculative.
 - No "flexibility" or "configurability" that wasn't requested.
 - No error handling for impossible scenarios.
 - If you write 200 lines and it could be 50, rewrite it.
-- Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+- Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes,
+  simplify.
 
-3. Surgical Changes
+## 3. Surgical Changes
+
 Touch only what you must. Clean up only your own mess.
 
 When editing existing code:
@@ -39,7 +46,8 @@ When your changes create orphans:
 
 The test: Every changed line should trace directly to the user's request.
 
-4. Goal-Driven Execution
+## 4. Goal-Driven Execution
+
 Define success criteria. Loop until verified.
 
 Transform tasks into verifiable goals:
@@ -54,17 +62,23 @@ For multi-step tasks, state a brief plan:
 2. [Step] → verify: [check]
 3. [Step] → verify: [check]
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+Strong success criteria let you loop independently. Weak criteria ("make it
+work") require constant clarification.
 
-5. Frequent, Atomic Commits
+## 5. Frequent, Atomic Commits
+
 Small diffs. Logical checkpoints. Keep changes reversible.
 
 When making changes:
 
-- Commit as soon as a logical sub-task passes its verification step. Never sit on a huge, uncommitted diff.
-- Keep commits atomic: one feature, fix, or refactor per commit. Never bundle unrelated changes.
+- Commit as soon as a logical sub-task passes its verification step. Never sit
+  on a huge, uncommitted diff.
+- Keep commits atomic: one feature, fix, or refactor per commit. Never bundle
+  unrelated changes.
 - Ensure the build and tests pass before committing. Don't commit broken states.
 - Clean up debug code, logs, and scratch files before staging.
-- Write clear, imperative commit messages describing *what* and *why* (e.g., `fix: handle expired auth token redirect`, not `update code`).
+- Write clear, imperative commit messages describing *what* and *why* (e.g.,
+  `fix: handle expired auth token redirect`, not `update code`).
 
-The test: Could this commit be cleanly reverted tomorrow without breaking unrelated work?
+The test: Could this commit be cleanly reverted tomorrow without breaking
+unrelated work?

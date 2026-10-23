@@ -10,7 +10,7 @@ export function Orders() {
   return <>
     <PageHeading eyebrow="WORKSPACE" title="Orders" description="Turn customer emails into checked, ready-to-confirm orders." action={<Button asChild><Link to="/orders/new"><span aria-hidden="true">＋</span> New order</Link></Button>} />
     {state.status === 'loading' ? <p role="status">Loading orders…</p> : state.status === 'error' ? <ErrorNotice error={state.error} retry={reload} /> : state.data.length === 0 ? <section className="empty-state">
-      <span className="empty-icon" aria-hidden="true">↗</span><p className="eyebrow">EMAIL TO ORDER</p><h2>Your first order starts here</h2><p>Choose a sample email or paste a fictional customer request.<br />Review the details, check the products, then confirm.</p><Button asChild><Link to="/orders/new">Create your first draft <span aria-hidden="true">→</span></Link></Button>
+      <h2>Your first order starts here</h2><p>Choose a sample email or paste a fictional customer request.<br />Review the details, check the products, then confirm.</p><Button asChild><Link to="/orders/new">Create your first draft <span aria-hidden="true">→</span></Link></Button>
     </section> : <section className="order-list" aria-label="Order history"><div className="list-heading"><h2>Order history</h2><span>{state.data.length} {state.data.length === 1 ? 'order' : 'orders'}</span></div>{state.data.map(order => <OrderRow key={order.id} order={order} />)}</section>}
   </>
 }

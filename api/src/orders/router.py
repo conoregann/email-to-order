@@ -5,13 +5,27 @@ from src.auth.models import GuestSession
 from src.auth.service import current_guest, require_browser_header
 from src.database import get_db
 from src.orders.drafts import create_draft, draft_response, owned_draft, save_draft
-from src.orders.models import Draft
+from src.orders.models import Draft, ExtractionAttempt
 from src.orders.schemas import CreateDraft, SampleEmail, UpdateDraft, ConfirmDraft
 from src.orders.confirmation import confirm_draft
 from src.orders.service import list_samples
+from src.integrations.gemini import available
+from src.orders.extraction import ExtractDraft, extract_draft
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 router.add_api_route("/samples", list_samples, response_model=list[SampleEmail], methods=["GET"])
+
+@router.get("/extraction-config")
+def extraction_config():
+    return {"enabled": available()}
+
+@router.post("/{draft_id}/extract", dependencies=[Depends(require_browser_header)])
+async def extract_order(draft_id: str, payload: ExtractDraft, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):
+    draft = await extract_draft(db, guest.id, draft_id, payload)
+    result = draft_response(db, draft)
+    attempt = db.get(ExtractionAttempt, str(payload.attempt_id))
+    result["requested_attempt"] = {"id": attempt.id, "status": attempt.status, "error": attempt.error}
+    return result
 
 @router.get("")
 def list_orders(response: Response, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):

@@ -8,6 +8,7 @@ import { ErrorNotice } from '../components/error-notice'
 import { Button } from '../components/ui/button'
 import { Select } from '../components/ui/select'
 import { QuantityResolution } from '../components/quantity-resolution'
+import { AddCustomer } from '../components/add-customer'
 import { editOrderLine } from '../lib/quantity-resolution'
 import { sendJson } from '../lib/api'
 import { availableStep, canContinueReview, initialProgress, reviewReducer, type ReviewStep } from '../lib/review-flow'
@@ -25,11 +26,11 @@ export function ReviewOrder() {
   if (resource.state.status !== 'ready' || customers.state.status !== 'ready' || products.state.status !== 'ready') return <p role="status">Loading order…</p>
   if (resource.state.data.status === 'confirmed') return <Navigate to={`/orders/${orderId}/confirmed`} replace />
   return <><PageHeading title="Review order" action={<Link className="back-link" to="/orders">Back to orders</Link>} />
-    <DraftEditor key={resource.state.data.id} order={resource.state.data} customers={customers.state.data} products={products.state.data} onSave={resource.setData} onReload={resource.reload} />
+    <DraftEditor key={resource.state.data.id} order={resource.state.data} customers={customers.state.data} onCustomersChange={customers.setData} products={products.state.data} onSave={resource.setData} onReload={resource.reload} />
   </>
 }
 
-function DraftEditor({ order, customers, products, onSave, onReload }: { order: Order; customers: Customer[]; products: Product[]; onSave: (order: Order) => void; onReload: () => void }) {
+function DraftEditor({ order, customers, onCustomersChange, products, onSave, onReload }: { order: Order; customers: Customer[]; onCustomersChange: (customers: Customer[]) => void; products: Product[]; onSave: (order: Order) => void; onReload: () => void }) {
   const [values, setValues] = useState<Values>(() => structuredClone(order.values))
   const [lineApprovals, setLineApprovals] = useState(() => order.values.lines.map(() => false))
   const [progress, dispatch] = useReducer(reviewReducer, initialProgress)
@@ -108,6 +109,9 @@ function DraftEditor({ order, customers, products, onSave, onReload }: { order: 
       <ExtractionControls order={order} disabled={dirty || locked} onUpdate={acceptExtraction} onBusy={setExtracting} />
       <ReviewSection step={0} title="Customer" summary={customer?.name} open={progress.active === 0} complete={progress.completed[0]} disabled={locked} onOpen={openStep}>
         <fieldset disabled={locked}><label htmlFor="customer">Customer</label><Select id="customer" value={values.customer_id ?? ''} disabled={locked} placeholder="Select customer" clearLabel="Clear customer" options={customers.map(customer => ({ value: customer.id, label: customer.name }))} onChange={value => { setValues({ ...values, customer_id: value || null, delivery_confirmed: false }); dispatch({ type: 'invalidate', step: 0 }) }} />
+          <AddCustomer name={order.extraction?.facts.customer_name} email={order.extraction?.facts.customer_email} disabled={locked} onBusy={setBusy} onCreated={customer => {
+            onCustomersChange([...customers, customer]); setValues({ ...values, customer_id: customer.id, delivery_confirmed: false }); dispatch({ type: 'invalidate', step: 0 })
+          }} />
           <label className="checkbox review-approval"><input type="checkbox" checked={progress.completed[0]} disabled={!customer} onChange={event => { if (event.target.checked) { dispatch({ type: 'complete', step: 0 }); focusStep(1) } else { setValues({ ...values, delivery_confirmed: false }); dispatch({ type: 'invalidate', step: 0 }) } }} /><span>Customer matches the email.</span></label>
           {progress.completed[0] ? next() : <span className="shortcut-hint"><kbd>Space</kbd> to check</span>}
         </fieldset>

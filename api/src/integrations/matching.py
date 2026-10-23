@@ -1,6 +1,7 @@
 """Deterministic catalogue suggestions. Every suggestion still requires review."""
 from src.catalogue.service import PRODUCTS
 from src.customers.service import CUSTOMERS
+from src.customers.schemas import Customer
 from src.integrations.schemas import Extraction
 from src.orders.schemas import DraftValues, LineValues
 
@@ -9,11 +10,11 @@ def normalized(value: str) -> str:
     return value.strip().casefold()
 
 
-def normalize(extraction: Extraction) -> DraftValues:
+def normalize(extraction: Extraction, customers: tuple[Customer, ...] = CUSTOMERS) -> DraftValues:
     identities = []
     for field, value in (("name", extraction.customer_name), ("email", extraction.customer_email)):
         if value.strip():
-            identities.append({c.id for c in CUSTOMERS if normalized(getattr(c, field)) == normalized(value)})
+            identities.append({c.id for c in customers if normalized(getattr(c, field)) == normalized(value)})
     customer_ids = set.intersection(*identities) if identities else set()
     lines = []
     for fact in extraction.lines:

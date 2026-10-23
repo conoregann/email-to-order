@@ -2,6 +2,7 @@ from collections import defaultdict
 from decimal import Decimal, ROUND_CEILING
 from src.catalogue.service import PRODUCTS
 from src.customers.service import CUSTOMERS
+from src.customers.schemas import Customer
 from src.orders.schemas import DraftValues, LineValues
 
 
@@ -19,7 +20,7 @@ def quantity_options(line: LineValues) -> dict | None:
             "supplied_units": supplied_units, "extra_units": str(supplied_units - units)}
 
 
-def validate(values: DraftValues) -> dict:
+def validate(values: DraftValues, customers: tuple[Customer, ...] = CUSTOMERS) -> dict:
     issues = []
     lines = []
     stock = defaultdict(Decimal)
@@ -29,8 +30,8 @@ def validate(values: DraftValues) -> dict:
     def issue(code, field, message, severity="blocker"):
         issues.append({"code": code, "field": field, "message": message, "severity": severity})
 
-    if values.customer_id not in {customer.id for customer in CUSTOMERS}:
-        issue("customer", "customer_id", "Select a catalogue customer.")
+    if values.customer_id not in {customer.id for customer in customers}:
+        issue("customer", "customer_id", "Select an existing customer or add a new customer.")
     if not values.delivery_address.strip():
         issue("address", "delivery_address", "Supply a delivery address.")
     elif not values.delivery_confirmed:

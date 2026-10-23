@@ -4,7 +4,7 @@ from uuid import uuid4
 from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
-from src.customers.service import CUSTOMERS
+from src.customers.service import workspace_customers
 from src.orders.drafts import draft_values
 from src.orders.models import ConfirmedOrder, Draft
 from src.orders.validation import validate
@@ -18,7 +18,8 @@ def confirm_draft(db: Session, draft: Draft, version: int) -> None:
     if version != draft.version:
         raise HTTPException(409, "Draft changed. Reload and review the latest version before confirming.")
     values = draft_values(draft)
-    validation = validate(values)
+    customers = workspace_customers(db, draft.guest_id)
+    validation = validate(values, customers)
     if not validation["can_confirm"]:
         raise HTTPException(422, {"message": "Resolve all blocking issues before confirmation.", "validation": validation})
     now = int(time.time())
@@ -32,7 +33,7 @@ def confirm_draft(db: Session, draft: Draft, version: int) -> None:
             db.refresh(draft)
             return
         raise HTTPException(409, "Draft changed. Reload and review before confirming.")
-    customer = next(customer for customer in CUSTOMERS if customer.id == values.customer_id)
+    customer = next(customer for customer in customers if customer.id == values.customer_id)
     order_id = str(uuid4())
     number = f"ORD-{datetime.fromtimestamp(now, timezone.utc):%Y}-{order_id[:13].replace('-', '').upper()}"
     details = [f"{line['cases']} case(s) of {line['name']} ({line['pack_size']} units per case): EUR {line['line_total']}"

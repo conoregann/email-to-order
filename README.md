@@ -106,6 +106,8 @@ SQLAlchemy → SQLite locally / PostgreSQL on Neon
 
 Two customers, saved addresses, four products and five sample scenarios remain immutable fictional fixtures. Guest sessions, drafts, editable lines and confirmed snapshots are stored in the database. FastAPI serves the built frontend and preserves JSON 404 responses for unknown API routes.
 
+During order review, use **Add new customer** in the Customer step to save a name and email and select that customer. New customers are stored in the current guest workspace and are available for later drafts there. Review the delivery address separately. Customer creation does not send email; confirmed orders preserve the selected customer details. Run migrations after pulling this change.
+
 ## Order and workspace rules
 
 - Every order read and write is scoped to an active guest session. Other visitors receive 404 for an order they do not own.

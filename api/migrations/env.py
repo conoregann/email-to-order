@@ -1,6 +1,7 @@
 from alembic import context
 from src.database import Base, database_url, make_engine
 from src.auth.models import GuestSession  # noqa: F401
+from src.customers.models import WorkspaceCustomer  # noqa: F401
 from src.orders.models import Draft, DraftLine, ConfirmedOrder  # noqa: F401
 
 config = context.config

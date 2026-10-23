@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 from src.integrations import gemini
+from src.customers.service import workspace_customers
 from src.integrations.matching import normalize
 from src.integrations.usage import lock_usage, reserve
 from src.orders.drafts import owned_draft
@@ -79,7 +80,7 @@ async def extract_draft(db: Session, guest_id: str, draft_id: str, payload: Extr
     attempt = db.get(ExtractionAttempt, attempt_id)
     if attempt.status != "running" or attempt.expires_at <= now:
         error_code = "timeout"
-    values = normalize(facts) if facts is not None and error_code is None else None
+    values = normalize(facts, workspace_customers(db, guest_id)) if facts is not None and error_code is None else None
     state = {"extraction_status": "failed", "extraction_error": error_code}
     if values is not None:
         data = values.model_dump(mode="json")

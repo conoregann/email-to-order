@@ -4,6 +4,7 @@ import { PageHeading } from '../components/page-heading'
 import { getJson, sendJson } from '../lib/api'
 import { useResource } from '../lib/use-resource'
 import type { Order } from '../lib/types'
+import { Select } from '../components/ui/select'
 import { Button } from '../components/ui/button'
 import { ErrorNotice } from '../components/error-notice'
 
@@ -37,9 +38,9 @@ export function NewOrder() {
       }
     } finally { setBusy(false) }
   }
-  return <><PageHeading eyebrow="NEW ORDER" title="Start with an email" description="Choose a fictional example or paste fictional customer email text." action={<Link className="back-link" to="/orders">← Back to orders</Link>} /><section>
+  return <><PageHeading title="New order" action={<Link className="back-link" to="/orders">← Back to orders</Link>} /><section>
     <label htmlFor="sample">Sample email</label>
-    {state.status === 'loading' ? <p role="status">Loading sample emails…</p> : state.status === 'error' ? <ErrorNotice error={state.error} retry={reload} /> : <select id="sample" disabled={busy || !!created} value={selected} onChange={event => { setSelected(event.target.value); setEmail(state.data.find(sample => sample.id === event.target.value)?.body ?? '') }}><option value="">Choose a sample</option>{state.data.map(sample => <option key={sample.id} value={sample.id}>{sample.title}</option>)}</select>}
+    {state.status === 'loading' ? <p role="status">Loading sample emails…</p> : state.status === 'error' ? <ErrorNotice error={state.error} retry={reload} /> : <Select id="sample" disabled={busy || !!created} value={selected} onChange={value => { setSelected(value); setEmail(state.data.find(sample => sample.id === value)?.body ?? '') }} placeholder="Choose a sample" clearLabel="Write my own email" options={state.data.map(sample => ({ value: sample.id, label: sample.title }))} />}
     <label htmlFor="email">Customer email</label><textarea id="email" rows={8} maxLength={20000} disabled={busy || !!created} value={email} onChange={event => { setEmail(event.target.value); setSelected('') }} placeholder="Paste fictional customer email text here" />
     {selected ? <p className="form-help">This sample opens with saved order details filled in. No AI is used. Review the product and delivery address before confirming.</p> : canExtract ? <p className="form-help">Create a draft from this email with Google Gemini, then review the suggestions. Use fictional data only.</p> : <p className="form-help">Choose a sample to start with filled-in details. For pasted emails, live extraction is unavailable; you can enter the details manually.</p>}
     {config.state.status === 'error' && <ErrorNotice error={config.state.error} retry={config.reload} />}

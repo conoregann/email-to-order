@@ -17,6 +17,8 @@ export function NewOrder() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const navigate = useNavigate()
+  const canExtract = config.state.status === 'ready' && config.state.data.enabled
+  const primaryMode = selected ? 'saved' : canExtract ? 'ai' : 'manual'
   async function create(mode: 'manual' | 'saved' | 'ai') {
     setBusy(true); setError(null)
     let order = created
@@ -39,14 +41,13 @@ export function NewOrder() {
     <label htmlFor="sample">Sample email</label>
     {state.status === 'loading' ? <p role="status">Loading sample emails…</p> : state.status === 'error' ? <ErrorNotice error={state.error} retry={reload} /> : <select id="sample" disabled={busy || !!created} value={selected} onChange={event => { setSelected(event.target.value); setEmail(state.data.find(sample => sample.id === event.target.value)?.body ?? '') }}><option value="">Choose a sample</option>{state.data.map(sample => <option key={sample.id} value={sample.id}>{sample.title}</option>)}</select>}
     <label htmlFor="email">Customer email</label><textarea id="email" rows={8} maxLength={20000} disabled={busy || !!created} value={email} onChange={event => { setEmail(event.target.value); setSelected('') }} placeholder="Paste fictional customer email text here" />
-    <p className="form-help">Manual entry starts with blank fields. Saved examples use labelled stored values and do not contact AI.</p>
-    {config.state.status === 'ready' && config.state.data.enabled ? <p className="form-help">Live extraction sends this email text to Google Gemini. Use fictional data only. AI suggestions require your review.</p> : <p className="form-help">Live extraction is unavailable. Manual entry and saved examples remain available.</p>}
+    {selected ? <p className="form-help">This sample opens with saved order details filled in. No AI is used. Review the product and delivery address before confirming.</p> : canExtract ? <p className="form-help">Create a draft from this email with Google Gemini, then review the suggestions. Use fictional data only.</p> : <p className="form-help">Choose a sample to start with filled-in details. For pasted emails, live extraction is unavailable; you can enter the details manually.</p>}
+    {config.state.status === 'error' && <ErrorNotice error={config.state.error} retry={config.reload} />}
     {created && <p role="status">Your email is saved. <Link to={`/orders/${created.id}/review`}>Open this draft to review, retry or continue manually</Link>.</p>}
     {busy && <p role="status">{created ? 'Extracting order suggestions…' : 'Saving email…'}</p>}
     {error != null && <ErrorNotice error={error} />}
-    {!created && <div className="actions"><Button disabled={busy || !email.trim()} onClick={() => create('manual')}>Create manual draft</Button>
-      {selected && <Button variant="secondary" disabled={busy} onClick={() => create('saved')}>Use saved example</Button>}
-      {config.state.status === 'ready' && config.state.data.enabled && <Button disabled={busy || !email.trim()} onClick={() => create('ai')}>Extract with Gemini</Button>}
+    {!created && <div className="actions"><Button disabled={busy || !email.trim() || config.state.status === 'loading'} onClick={() => create(primaryMode)}>{busy ? 'Preparing draft…' : primaryMode === 'manual' ? 'Create manual draft' : 'Create order draft'}</Button>
+      {primaryMode !== 'manual' && <button type="button" className="text-button" disabled={busy || !email.trim()} onClick={() => create('manual')}>Enter details manually instead</button>}
     </div>}
   </section></>
 }

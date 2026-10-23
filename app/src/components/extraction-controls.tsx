@@ -26,14 +26,16 @@ export function ExtractionControls({ order, disabled, onUpdate, onBusy }: { orde
   }
   if (!eligible) return null
   return <div className="notice">
+    <h3>Fill in this draft</h3>
     {order.extraction_message && <p role="status">{order.extraction_message}</p>}
-    {running ? <p role="status">Extraction is running. Reload its status after a lost response. An interrupted attempt expires automatically.</p> : <p>Live extraction sends the original text to Google Gemini. Use fictional data only. Every suggestion needs review.</p>}
+    {running ? <p role="status">Extracting details from your email…</p> : <p>{samples.state.status === 'ready' && samples.state.data.some(sample => sample.body === order.original_email) ? 'This sample has saved details ready to use. Fill them in, then review the product and address.' : config.state.status === 'ready' && config.state.data.enabled ? 'Extract suggestions with Google Gemini, then review each field. Use fictional data only.' : 'Live extraction is unavailable. Enter the order details below.'}</p>}
+    {config.state.status === 'error' && <ErrorNotice error={config.state.error} retry={config.reload} />}
     {busy && <p role="status">Working… Your email is saved.</p>}
     {error != null && <ErrorNotice error={error} />}
     <div className="actions">
       {!running && config.state.status === 'ready' && config.state.data.enabled && <Button disabled={busy || disabled} onClick={() => action('extract')}>{order.extraction_status === 'failed' ? 'Retry extraction' : 'Extract with Gemini'}</Button>}
-      {!running && samples.state.status === 'ready' && samples.state.data.some(sample => sample.body === order.original_email) && <Button disabled={busy || disabled} onClick={() => action('saved-example')}>Use saved example (no AI)</Button>}
-      <button type="button" className="text-button" disabled={busy || disabled} onClick={() => action('reload')}>Reload extraction status</button>
+      {!running && samples.state.status === 'ready' && samples.state.data.some(sample => sample.body === order.original_email) && <Button disabled={busy || disabled} onClick={() => action('saved-example')}>Fill from sample (no AI)</Button>}
+      {(running || error != null) && <button type="button" className="text-button" disabled={busy || disabled} onClick={() => action('reload')}>Check extraction status</button>}
     </div>
     <p>{disabled ? 'Save or discard your edits before changing the draft source.' : 'You can also enter and save the order details manually below.'}</p>
   </div>

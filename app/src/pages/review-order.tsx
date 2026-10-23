@@ -21,7 +21,7 @@ export function ReviewOrder() {
   if (resource.state.data.status === 'confirmed') return <Navigate to={`/orders/${orderId}/confirmed`} replace />
   return <><PageHeading eyebrow="REVIEW ORDER" title="Check the details" description="Compare the draft with the original email before confirming." action={<Link className="back-link" to="/orders">← Back to orders</Link>} />
     {message && <p role="status" className="notice success">{message}</p>}
-    <DraftEditor key={`${resource.state.data.id}:${resource.state.data.version}`} order={resource.state.data} customers={customers.state.data} products={products.state.data} onSave={order => { resource.setData(order); setMessage('Draft saved. Checks are up to date.') }} onReload={resource.reload} />
+    <DraftEditor key={`${resource.state.data.id}:${resource.state.data.version}`} order={resource.state.data} customers={customers.state.data} products={products.state.data} onSave={order => { resource.setData(order); setMessage(order.validation.can_confirm ? 'Draft saved. Ready to confirm.' : 'Draft saved. Review the remaining checks below.') }} onReload={resource.reload} />
   </>
 }
 function DraftEditor({ order, customers, products, onSave, onReload }: { order: Order; customers: Customer[]; products: Product[]; onSave: (order: Order) => void; onReload: () => void }) {

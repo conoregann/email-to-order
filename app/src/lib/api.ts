@@ -7,7 +7,7 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
   if (!response.ok) {
     const body = await response.json().catch(() => null)
     const detail = body?.detail
-    const message = typeof detail === 'string' ? detail : detail?.message ?? (Array.isArray(detail) ? 'Some fields are invalid. Check quantities and field lengths.' : `Request failed (${response.status}). Please retry.`)
+    const message = response.status === 405 ? 'The server is running an older version of the app. Restart the API server, then reload this page. Your saved draft is still available.' : typeof detail === 'string' ? detail : detail?.message ?? (Array.isArray(detail) ? 'Some fields are invalid. Check quantities and field lengths.' : `Request failed (${response.status}). Please retry.`)
     throw new ApiError(message, response.status)
   }
   return response.json() as Promise<T>

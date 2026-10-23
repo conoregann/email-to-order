@@ -2,8 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f4ef" />
+    <script>
+      (() => {
+        let theme = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        try {
+          const saved = localStorage.getItem('email-to-order-theme')
+          if (saved === 'light' || saved === 'dark') theme = saved
+        } catch { /* Use the default theme when storage is unavailable. */ }
+        document.documentElement.dataset.theme = theme
+        document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#17191b' : '#f4f4ef'
+      })()
+    </script>
     <title>Email to Order</title>
   </head>
   <body>

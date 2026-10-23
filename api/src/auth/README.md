@@ -1,1 +1,1 @@
-Guest sessions, ownership checks and session expiry will be implemented before order persistence is exposed.
+Visitors receive an opaque, HttpOnly, SameSite=Strict cookie. Only its SHA-256 hash is stored. Sessions expire after 24 hours. All order reads and writes must use the active guest dependency and scope records by guest ID. Set COOKIE_SECURE=true for HTTPS deployment. Mutation requests require X-Requested-With: EmailToOrder to reject cross-origin form requests. Rate limits and scheduled record cleanup remain required before public deployment.

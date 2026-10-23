@@ -1,4 +1,6 @@
 from pathlib import Path
+from src.database import database_url, make_engine, session_factory
+from src.auth.router import router as auth_router
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,14 +10,16 @@ from src.customers.router import router as customers_router
 from src.catalogue.router import router as catalogue_router
 
 
-def create_app(dist: Path | None = None) -> FastAPI:
+def create_app(dist: Path | None = None, db_url: str | None = None) -> FastAPI:
     app = FastAPI(title=settings.app_name)
+    app.state.engine = make_engine(database_url(db_url))
+    app.state.sessions = session_factory(app.state.engine)
 
     @app.get("/api/health", tags=["health"])
     def health():
         return {"status": "ok"}
 
-    for router in (orders_router, customers_router, catalogue_router):
+    for router in (auth_router, orders_router, customers_router, catalogue_router):
         app.include_router(router, prefix="/api")
 
     build = (dist or ROOT / "app" / "dist").resolve()

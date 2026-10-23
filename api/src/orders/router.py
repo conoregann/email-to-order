@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from src.auth.models import GuestSession
 from src.auth.service import current_guest, require_browser_header
 from src.database import get_db
-from src.orders.drafts import create_draft, draft_response, owned_draft, save_draft
+from src.orders.drafts import create_draft, draft_response, owned_draft, save_draft, apply_saved_example
 from src.orders.models import Draft, ExtractionAttempt
 from src.orders.schemas import CreateDraft, SampleEmail, UpdateDraft, ConfirmDraft
 from src.orders.confirmation import confirm_draft
@@ -52,3 +52,8 @@ def confirm_order(draft_id: str, payload: ConfirmDraft, guest: GuestSession = De
     draft = owned_draft(db, guest.id, draft_id)
     confirm_draft(db, draft, payload.version)
     return draft_response(db, draft)
+
+
+@router.post("/{draft_id}/saved-example", dependencies=[Depends(require_browser_header)])
+def saved_example(draft_id: str, payload: ConfirmDraft, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):
+    return draft_response(db, apply_saved_example(db, owned_draft(db, guest.id, draft_id), payload.version))

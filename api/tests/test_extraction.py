@@ -167,3 +167,20 @@ def test_late_result_after_expiry_is_discarded(guest, provider, app):
     assert result["extraction_status"] == "failed"
     assert result["extraction_error"] == "timeout"
     assert result["extraction"] is None
+
+
+def test_saved_example_recovery_is_exact_and_durable(guest, provider):
+    from src.orders.service import SAMPLES
+    draft = blank(guest, SAMPLES[0].body)
+    provider.side_effect = gemini.ExtractionError("timeout")
+    failed = extract(guest, draft).json()
+    recovered = guest.post(f"/api/orders/{draft['id']}/saved-example", headers=HEADERS, json={"version": 1})
+    assert recovered.status_code == 200, recovered.text
+    recovered = recovered.json()
+    assert recovered["id"] == failed["id"]
+    assert recovered["source"] == "saved_example"
+    assert recovered["extraction"] is None
+    assert recovered["values"]["lines"]
+    arbitrary = blank(guest, "arbitrary pasted email")
+    assert guest.post(f"/api/orders/{arbitrary['id']}/saved-example", headers=HEADERS, json={"version": 1}).status_code == 409
+    assert guest.post(f"/api/orders/{draft['id']}/saved-example", headers=HEADERS, json={"version": 1}).status_code == 409

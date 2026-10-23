@@ -40,6 +40,7 @@ def confirm_draft(db: Session, draft: Draft, version: int) -> None:
     preview = (f"SIMULATED CONFIRMATION — no email sent\nTo: {customer.email}\nSubject: Order {number}\n\n"
                f"Hello {customer.name},\n\nYour order {number} has been recorded in this demo.\n"
                + "\n".join(details) + f"\nTotal: EUR {validation['total']}\nDelivery address: {values.delivery_address}\n"
+               + (f"Delivery instructions: {values.delivery_instructions}\n" if values.delivery_instructions else "")
                + (f"Requested delivery: {values.requested_delivery_date} (not guaranteed).\n" if values.requested_delivery_date else "")
                + "Stock is simulated; no inventory is reserved.")
     snapshot = {"id": order_id, "number": number, "confirmed_at": now,

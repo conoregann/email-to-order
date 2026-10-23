@@ -86,3 +86,24 @@ def save_draft(db: Session, draft: Draft, payload: UpdateDraft) -> Draft:
     db.commit()
     db.refresh(draft)
     return draft
+
+
+def apply_saved_example(db: Session, draft: Draft, version: int) -> Draft:
+    sample = next((sample for sample in SAMPLES if sample.body == draft.original_email), None)
+    if sample is None or draft.source != "manual" or version != 1:
+        raise HTTPException(409, "Saved examples require an unchanged matching sample draft.")
+    values = DraftValues(**SAMPLE_VALUES[sample.id])
+    changed = db.execute(update(Draft).where(Draft.id == draft.id, Draft.version == version,
+        Draft.status == "draft", Draft.source == "manual",
+        Draft.extraction_status.in_(["not_started", "failed"])).values(
+            source="saved_example", initial_values=values.model_dump(mode="json"),
+            values=values.model_dump(mode="json", exclude={"lines"}), version=version + 1,
+            updated_at=int(time.time())), execution_options={"synchronize_session": False})
+    if changed.rowcount != 1:
+        db.rollback()
+        raise HTTPException(409, "Draft changed. Reload before using a saved example.")
+    draft.lines = [DraftLine(id=str(uuid4()), position=i, values=line.model_dump(mode="json"))
+                   for i, line in enumerate(values.lines)]
+    db.commit()
+    db.refresh(draft)
+    return draft

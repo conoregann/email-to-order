@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { ExtractionControls } from '../components/extraction-controls'
 import { ErrorNotice } from '../components/error-notice'
 import { Button } from '../components/ui/button'
 import { sendJson } from '../lib/api'
@@ -25,6 +26,7 @@ export function ReviewOrder() {
 function DraftEditor({ order, customers, products, onSave, onReload }: { order: Order; customers: Customer[]; products: Product[]; onSave: (order: Order) => void; onReload: () => void }) {
   const [values, setValues] = useState<Values>(() => structuredClone(order.values))
   const [busy, setBusy] = useState(false)
+  const [extracting, setExtracting] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const navigate = useNavigate()
   const dirty = JSON.stringify(values) !== JSON.stringify(order.values)
@@ -40,12 +42,13 @@ function DraftEditor({ order, customers, products, onSave, onReload }: { order: 
     try { await sendJson<Order>(`/orders/${order.id}/confirm`, 'POST', { version: order.version }); navigate(`/orders/${order.id}/confirmed`) }
     catch (error) { setError(error) } finally { setBusy(false) }
   }
-  return <div className="review-grid"><section className="email-panel"><p className="eyebrow">ORIGINAL EMAIL</p><pre>{order.original_email}</pre><p>{order.source === 'saved_example' ? 'Prefilled from labelled saved example values. No AI was used.' : 'Manual entry. No AI extraction has been performed.'}</p><details><summary>Initial draft values</summary><pre>{JSON.stringify(order.initial_values, null, 2)}</pre></details></section>
-    <section><h2>Order draft</h2><fieldset disabled={busy}>
+  return <div className="review-grid"><section className="email-panel"><p className="eyebrow">ORIGINAL EMAIL</p><pre>{order.original_email}</pre><p>{order.source === 'saved_example' ? 'Saved example — stored values, no AI.' : order.source === 'ai_suggestion' ? 'AI suggestion — review every field before confirmation.' : 'Manual — enter and review the order details.'}</p><details><summary>Current reviewed values</summary><pre>{JSON.stringify(values, null, 2)}</pre></details>{order.extraction && <details><summary>Validated AI extraction and provenance</summary><pre>{JSON.stringify(order.extraction, null, 2)}</pre></details>}<details><summary>Initial draft values</summary><pre>{JSON.stringify(order.initial_values, null, 2)}</pre></details></section>
+    <section><h2>Order draft</h2><ExtractionControls order={order} disabled={dirty || busy} onUpdate={onSave} onBusy={setExtracting} /><fieldset disabled={busy || extracting}>
       <label htmlFor="customer">Customer</label><select id="customer" value={values.customer_id ?? ''} onChange={event => setValues({ ...values, customer_id: event.target.value || null, delivery_confirmed: false })}><option value="">Select customer</option>{customers.map(customer => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select>
       {customer && <><label htmlFor="saved-address">Use a saved delivery address</label><select id="saved-address" value="" onChange={event => { const address = customer.addresses.find(address => address.id === event.target.value); if (address) setValues({ ...values, delivery_address: address.lines.join(', '), delivery_confirmed: false }) }}><option value="">Choose to replace the address below</option>{customer.addresses.map(address => <option key={address.id} value={address.id}>{address.label}: {address.lines.join(', ')}</option>)}</select></>}
       <label htmlFor="delivery-address">Delivery address</label><textarea id="delivery-address" rows={3} maxLength={1500} value={values.delivery_address} onChange={event => setValues({ ...values, delivery_address: event.target.value, delivery_confirmed: false })} />
       <label className="checkbox"><input type="checkbox" checked={values.delivery_confirmed} onChange={event => setValues({ ...values, delivery_confirmed: event.target.checked })} />I checked this address against the email and resolved any conflict.</label>
+      <label htmlFor="delivery-instructions">Delivery instructions</label><textarea id="delivery-instructions" rows={3} maxLength={1500} value={values.delivery_instructions ?? ''} onChange={event => setValues({ ...values, delivery_instructions: event.target.value })} />
       <label htmlFor="delivery-date">Requested delivery date (optional)</label><input id="delivery-date" type="date" value={values.requested_delivery_date ?? ''} onChange={event => setValues({ ...values, requested_delivery_date: event.target.value || null })} /><p>Requested dates are not guaranteed.</p>
       <h2>Products</h2>{values.lines.map((line, index) => {
         const product = products.find(product => product.sku === line.sku)
@@ -65,7 +68,7 @@ function DraftEditor({ order, customers, products, onSave, onReload }: { order: 
       {order.validation.issues.length ? <ul>{order.validation.issues.map((issue, index) => <li key={index} className={issue.severity}><strong>{issue.severity === 'blocker' ? 'Blocking issue' : 'Warning'}</strong>: {issue.field.startsWith('lines.') ? `Line ${Number(issue.field.split('.')[1]) + 1}: ` : ''}{issue.message}</li>)}</ul> : <p className="notice success">All checks passed. Ready to confirm.</p>}
       <p className="total">{order.validation.can_confirm ? 'Total' : 'Current calculated total'}: {money(order.validation.total)}</p></>}
     </div>
-    {error != null && <ErrorNotice error={error} />}<div className="actions"><Button disabled={busy || !dirty} onClick={save}>{busy ? 'Working…' : 'Save draft & check'}</Button><Button disabled={busy || dirty || !order.validation.can_confirm} onClick={confirm}>Confirm order</Button><button type="button" disabled={busy} className="text-button" onClick={() => { if (!dirty || window.confirm('Discard unsaved changes and reload this draft?')) onReload() }}>Reload saved draft</button></div>
+    {error != null && <ErrorNotice error={error} />}<div className="actions"><Button disabled={busy || extracting || !dirty} onClick={save}>{busy ? 'Working…' : 'Save draft & check'}</Button><Button disabled={busy || extracting || dirty || !order.validation.can_confirm} onClick={confirm}>Confirm order</Button><button type="button" disabled={busy || extracting} className="text-button" onClick={() => { if (!dirty || window.confirm('Discard unsaved changes and reload this draft?')) onReload() }}>Reload saved draft</button></div>
     <p>Confirmation rechecks the order. Stock is simulated and is not reserved. No email will be sent.</p>
     </section></div>
 }

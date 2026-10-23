@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 import { PageHeading } from '../components/page-heading'
@@ -6,12 +8,13 @@ import { useResource } from '../lib/use-resource'
 import { money, type Order } from '../lib/types'
 
 export function Orders() {
+  const [filter, setFilter] = useState<'all' | 'draft' | 'confirmed'>('all')
   const { state, reload } = useResource<Order[]>('/orders')
   return <>
-    <PageHeading eyebrow="WORKSPACE" title="Orders" description="Turn customer emails into checked, ready-to-confirm orders." action={<Button asChild><Link to="/orders/new"><span aria-hidden="true">＋</span> New order</Link></Button>} />
-    {state.status === 'loading' ? <p role="status">Loading orders…</p> : state.status === 'error' ? <ErrorNotice error={state.error} retry={reload} /> : state.data.length === 0 ? <section className="empty-state">
+    <PageHeading eyebrow="YOUR WORKSPACE" title="Your orders, at a glance." description="From customer email to checked order. Everything you need, in one place." action={<Button asChild><Link to="/orders/new"><span aria-hidden="true">＋</span> New order</Link></Button>} />
+    {state.status === 'loading' ? <p role="status">Loading orders…</p> : state.status === 'error' ? <ErrorNotice error={state.error} retry={reload} /> : <><OrderOverview orders={state.data} />{state.data.length === 0 ? <section className="empty-state">
       <h2>Your first order starts here</h2><p>Choose a sample email or paste a fictional customer request.<br />Review the details, check the products, then confirm.</p><Button asChild><Link to="/orders/new">Create your first draft <span aria-hidden="true">→</span></Link></Button>
-    </section> : <section className="order-list" aria-label="Order history"><div className="list-heading"><h2>Order history</h2><span>{state.data.length} {state.data.length === 1 ? 'order' : 'orders'}</span></div>{state.data.map(order => <OrderRow key={order.id} order={order} />)}</section>}
+    </section> : <section className="order-list" aria-label="Order history"><div className="list-heading"><div><p className="eyebrow">THE DETAILS</p><h2>Your orders</h2></div><div className="order-filters" role="group" aria-label="Filter orders">{(['all', 'draft', 'confirmed'] as const).map(value => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{value === 'all' ? 'All' : value === 'draft' ? 'Drafts' : 'Confirmed'} <span>{state.data.filter(order => value === 'all' || order.status === value).length}</span></button>)}</div></div><div aria-live="polite">{state.data.filter(order => filter === 'all' || order.status === filter).map(order => <OrderRow key={order.id} order={order} />)}{!state.data.some(order => filter === 'all' || order.status === filter) && <p className="filtered-empty">No {filter === 'draft' ? 'drafts' : 'confirmed orders'} yet. Choose another view to see your orders.</p>}</div></section>}</>}
   </>
 }
 
@@ -24,4 +27,20 @@ function OrderRow({ order }: { order: Order }) {
     <div className="order-amount"><strong>{money(order.validation.total)}</strong>{!confirmed && <p className={blockers ? 'blocker' : ''}>{blockers ? `${blockers} blocking ${blockers === 1 ? 'issue' : 'issues'}` : order.validation.can_confirm ? 'Ready to confirm' : 'Review required'}</p>}</div>
     <Button asChild variant="secondary"><Link to={destination} aria-label={`${confirmed ? 'View' : 'Review'} ${order.confirmed?.number ?? `draft ${order.id.slice(0, 8)}`}`}>{confirmed ? 'View order' : 'Review draft'} <span aria-hidden="true">→</span></Link></Button>
   </article>
+}
+
+function OrderOverview({ orders }: { orders: Order[] }) {
+  const drafts = orders.filter(order => order.status === 'draft')
+  const confirmed = orders.filter(order => order.status === 'confirmed')
+  const blockers = drafts.reduce((count, order) => count + order.validation.issues.filter(issue => issue.severity === 'blocker').length, 0)
+  const ready = drafts.filter(order => order.validation.can_confirm).length
+  const confirmedCents = confirmed.reduce((total, order) => total + Math.round(Number(order.confirmed?.validation.total ?? order.validation.total) * 100), 0)
+  return <div className="overview-grid" aria-label="Workspace overview">
+    <section className="overview-card overview-mix"><h2>Order mix</h2><div className="metric-value">{orders.length}<span>total {orders.length === 1 ? 'order' : 'orders'}</span></div>
+      <div className="mix-chart" role="img" aria-label={`${drafts.length} drafts and ${confirmed.length} confirmed orders`}>{orders.length > 0 && <>{drafts.length > 0 && <span className="mix-drafts" style={{ '--share': `${drafts.length / orders.length * 100}%` } as CSSProperties} />}{confirmed.length > 0 && <span className="mix-confirmed" style={{ '--share': `${confirmed.length / orders.length * 100}%` } as CSSProperties} />}</>}</div>
+      <dl className="mix-legend"><div><dt>Drafts</dt><dd>{drafts.length}</dd></div><div><dt>Confirmed</dt><dd>{confirmed.length}</dd></div></dl>
+    </section>
+    <section className="overview-card overview-review"><h2>Awaiting review</h2><div className="metric-value">{drafts.length}</div><p>{drafts.length === 0 ? 'A clear desk. No drafts waiting.' : blockers ? `${blockers} blocking ${blockers === 1 ? 'issue' : 'issues'} across your drafts.` : 'Your drafts are ready for a closer look.'}</p><span className="metric-note">{ready} ready to confirm</span></section>
+    <section className="overview-card overview-value"><h2>Confirmed value</h2><div className="metric-value">{money((confirmedCents / 100).toFixed(2))}</div><p>{`${confirmed.length} confirmed ${confirmed.length === 1 ? 'order' : 'orders'} in this workspace.`}</p><span className="metric-note">EUR · Demo orders</span></section>
+  </div>
 }

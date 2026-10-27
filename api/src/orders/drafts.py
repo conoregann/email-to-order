@@ -3,6 +3,8 @@ from uuid import uuid4
 from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
+from src.config import settings
+from src.safeguards import check_capacity
 from src.orders.models import Draft, DraftLine, ConfirmedOrder
 from src.orders.schemas import CreateDraft, DraftValues, UpdateDraft
 from src.orders.service import SAMPLES
@@ -57,6 +59,7 @@ def create_draft(db: Session, guest_id: str, payload: CreateDraft) -> Draft:
             raise HTTPException(422, "Edited sample email must start as a blank manual draft.")
         values = DraftValues(**SAMPLE_VALUES[sample.id])
         source = "saved_example"
+    check_capacity(db, Draft, settings.workspace_order_limit, "Order", guest_id)
     now = int(time.time())
     data = values.model_dump(mode="json")
     draft = Draft(id=str(uuid4()), guest_id=guest_id, original_email=payload.email,

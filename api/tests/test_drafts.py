@@ -39,7 +39,7 @@ def test_ownership_on_every_draft_operation(guest, app):
     with TestClient(app) as stranger:
         assert stranger.get("/api/orders").status_code == 401
         stranger.post("/api/auth/guest", headers=HEADERS)
-        assert stranger.get("/api/orders").json() == []
+        assert stranger.get("/api/orders").json()["items"] == []
         assert stranger.get(f"/api/orders/{draft['id']}").status_code == 404
         assert save(stranger, draft).status_code == 404
     with app.state.sessions() as db:

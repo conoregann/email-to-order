@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from src.auth.models import GuestSession
 from src.auth.service import current_guest, find_guest, require_browser_header
 from src.database import get_db
+from src.config import settings
+from src.safeguards import check_capacity
 from src.customers.models import WorkspaceCustomer
 from src.customers.schemas import CreateCustomer, Customer
 from src.customers.service import list_customers, workspace_customers
@@ -19,6 +21,7 @@ def customers(request: Request, response: Response, db: Session = Depends(get_db
 
 @router.post("", response_model=Customer, status_code=201, dependencies=[Depends(require_browser_header)])
 def create_customer(payload: CreateCustomer, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):
+    check_capacity(db, WorkspaceCustomer, settings.workspace_customer_limit, "Customer", guest.id)
     record = WorkspaceCustomer(id=str(uuid4()), guest_id=guest.id, name=payload.name, email=payload.email)
     db.add(record)
     db.commit()

@@ -5,6 +5,8 @@ from src.customers.models import WorkspaceCustomer  # noqa: F401
 from src.catalogue.models import WorkspaceProduct  # noqa: F401
 from src.orders.models import Draft, DraftLine, ConfirmedOrder  # noqa: F401
 
+from src.safeguards import PublicLock, RateBucket  # noqa: F401
+
 config = context.config
 url = config.attributes.get("database_url") or database_url()
 

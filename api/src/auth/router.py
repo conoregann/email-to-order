@@ -10,7 +10,7 @@ router = APIRouter(prefix="/auth", tags=["guest"], dependencies=[Depends(require
 def start_guest(request: Request, response: Response, db: Session = Depends(get_db)):
     guest = find_guest(request, db)
     if guest is None:
-        guest, token = new_guest(db)
+        guest, token = new_guest(db, request.client.host if request.client else "unknown")
         response.set_cookie(COOKIE, token, max_age=SESSION_SECONDS, httponly=True,
                             secure=settings.cookie_secure, samesite="strict", path="/api")
     response.headers["Cache-Control"] = "no-store"

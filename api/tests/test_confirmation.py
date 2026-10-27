@@ -30,7 +30,7 @@ def test_confirmation_rechecks_and_retries_without_duplicates(guest, app):
     assert save(guest, order).status_code == 409
     with app.state.sessions() as db:
         assert db.scalar(select(func.count()).select_from(ConfirmedOrder)) == 1
-    assert guest.get("/api/orders").json()[0]["confirmed"] == order["confirmed"]
+    assert guest.get("/api/orders").json()["items"][0]["confirmed"] == order["confirmed"]
 
 
 def test_concurrent_confirmations_have_one_order(guest, app):

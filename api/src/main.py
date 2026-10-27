@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from src.config import ROOT, settings
+from src.safeguards import PublicAccessMiddleware
 from src.orders.router import router as orders_router
 from src.customers.router import router as customers_router
 from src.catalogue.router import router as catalogue_router
@@ -14,6 +15,8 @@ def create_app(dist: Path | None = None, db_url: str | None = None) -> FastAPI:
     app = FastAPI(title=settings.app_name)
     app.state.engine = make_engine(database_url(db_url))
     app.state.sessions = session_factory(app.state.engine)
+
+    app.add_middleware(PublicAccessMiddleware, sessions=app.state.sessions)
 
     @app.get("/api/health", tags=["health"])
     def health():

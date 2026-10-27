@@ -60,7 +60,7 @@ def test_clarification_survives_save_reload_and_resolution_is_frozen(guest):
     pending = save(guest, draft, lines=[line], delivery_confirmed=True).json()
     reloaded = guest.get(f"/api/orders/{draft['id']}").json()
     assert reloaded["values"] == pending["values"]
-    assert guest.get("/api/orders").json()[0]["values"]["lines"][0]["quantity_resolution"]["status"] == "needs_clarification"
+    assert guest.get("/api/orders").json()["items"][0]["values"]["lines"][0]["quantity_resolution"]["status"] == "needs_clarification"
     assert confirm(guest, reloaded).status_code == 422
     line.update(quantity="2", quantity_unit="case", match_confirmed=False, quantity_resolution=resolution())
     adjusted = save(guest, reloaded, lines=[line]).json()

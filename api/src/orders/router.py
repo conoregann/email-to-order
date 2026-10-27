@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, Response
-from sqlalchemy import select
+from typing import Literal
+from fastapi import APIRouter, Depends, Query, Response
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from src.auth.models import GuestSession
 from src.auth.service import current_guest, require_browser_header
@@ -30,10 +31,16 @@ async def extract_order(draft_id: str, payload: ExtractDraft, guest: GuestSessio
     return result
 
 @router.get("")
-def list_orders(response: Response, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):
+def list_orders(response: Response, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db),
+                limit: int = Query(default=25, ge=1, le=50), offset: int = Query(default=0, ge=0, le=1000),
+                status: Literal["draft", "confirmed"] | None = None):
     response.headers["Cache-Control"] = "no-store"
-    drafts = db.scalars(select(Draft).where(Draft.guest_id == guest.id).order_by(Draft.created_at.desc(), Draft.id)).all()
-    return [draft_response(db, draft) for draft in drafts]
+    query = select(Draft).where(Draft.guest_id == guest.id)
+    if status is not None:
+        query = query.where(Draft.status == status)
+    total = db.scalar(select(func.count()).select_from(query.subquery()))
+    drafts = db.scalars(query.order_by(Draft.created_at.desc(), Draft.id).offset(offset).limit(limit)).all()
+    return {"items": [draft_response(db, draft) for draft in drafts], "total": total}
 
 @router.post("", status_code=201, dependencies=[Depends(require_browser_header)])
 def new_order(payload: CreateDraft, guest: GuestSession = Depends(current_guest), db: Session = Depends(get_db)):

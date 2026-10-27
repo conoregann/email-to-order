@@ -1,6 +1,5 @@
 from collections import Counter
 from fastapi.testclient import TestClient
-from src.main import create_app
 from src.catalogue.service import PRODUCTS
 from src.customers.service import CUSTOMERS
 from src.orders.service import SAMPLES
@@ -18,8 +17,8 @@ def test_seed_relationships_and_scenarios():
     assert all(c.email.endswith(".example") for c in CUSTOMERS)
 
 
-def test_seed_api_serialization_and_static_route_priority():
-    with TestClient(create_app()) as client:
+def test_seed_api_serialization_and_static_route_priority(app):
+    with TestClient(app) as client:
         samples = client.get("/api/orders/samples")
         assert samples.status_code == 200
         assert len(samples.json()) == 5

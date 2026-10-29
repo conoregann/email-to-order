@@ -1,3 +1,7 @@
+# Verification records
+
+These dated records describe earlier milestones. Test counts and remaining-work statements apply to those runs. For current setup and implemented safeguards, see the [README](../README.md) and [operations guide](operations.md).
+
 # AI-assisted draft verification — 23 October 2026
 
 ## Results
@@ -38,7 +42,7 @@ No live Gemini smoke check was performed. Local configuration had a key, but no 
 
 Before enabling: verify structured-output support and free-tier eligibility for the selected model in the actual project, verify quotas and billing/overage settings without enabling paid services, lower application limits if necessary, then deliberately extract fictional text once. Record the actual model identifier, date, outcome, observed allowance consumption and successful staff review/confirmation here. Do not treat mocked tests as live verification.
 
-See [setup, limits and data handling](../README.md#optional-gemini-extraction), [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output) and [model pricing/data use](https://ai.google.dev/gemini-api/docs/pricing). Free-tier content may be used to improve Google's products; keep demo text fictional.
+See [setup, limits and data handling](../README.md#configuration), [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output) and [model pricing/data use](https://ai.google.dev/gemini-api/docs/pricing). Free-tier content may be used to improve Google's products; keep demo text fictional.
 
 ## Remaining public-demo work
 

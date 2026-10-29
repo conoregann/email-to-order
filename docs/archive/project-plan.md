@@ -1,3 +1,4 @@
+> Historical plan: Original project plan. Status statements describe the planning baseline, not the current release. See the [README](../../README.md) for current behavior and setup.
 
 **Repository:** `email-to-order`
 

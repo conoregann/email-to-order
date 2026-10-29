@@ -1,3 +1,11 @@
-Run from `api/`: `../.venv/bin/python -m alembic upgrade head`.
+# Database migrations
 
-The initial migration creates guest sessions, drafts, editable lines, and confirmed snapshots. DATABASE_URL selects PostgreSQL; with no URL the local SQLite file is `.local/orders.db` at the repository root. Schema creation is explicit, never performed by application startup. Downgrade removes temporary order data.
+From the repository root, after installing backend dependencies:
+
+```sh
+.venv/bin/python -m alembic -c api/alembic.ini upgrade head
+```
+
+Run this before starting the API and after pulling database changes. Application startup does not create or migrate the schema.
+
+SQLite defaults to `.local/orders.db` at the repository root. Set `DATABASE_URL` in the root `.env` to use PostgreSQL. Migrations update the selected database; they do not copy data between databases. Downgrades can delete data.

@@ -8,5 +8,6 @@ clock; absolute dates require an explicit year and an excerpt present in the ori
 
 Live extraction defaults off and requires an explicit key and model. Verify the actual
 project's free-tier eligibility, structured-output support and quotas before enabling it.
-See the root README for limits, data handling, setup and failure recovery. Tests require no
+See the [README](../../../README.md#configuration) for setup and data handling,
+and [operations](../../../docs/operations.md) for public limits and cleanup. Tests require no
 provider credentials or network. GitHub OAuth and Resend remain second-release work.

@@ -1,3 +1,5 @@
+> Historical plan: AI extraction implementation plan. Status statements describe the planning baseline, not the current release. See the [README](../../README.md) for current behavior and setup.
+
 # Next phase: AI-assisted order drafts
 
 Planning baseline: 23 October 2026, `development` at `35d6ab6`.
@@ -6,7 +8,7 @@ Planning baseline: 23 October 2026, `development` at `35d6ab6`.
 
 Steps 1–5 are implemented and committed on `development`. Step 6 automated and browser checks
 pass: 85 tests on SQLite and disposable PostgreSQL 14, frontend lint/build, and desktop/mobile
-checks with a temporary fictional provider. See [verification results](verification.md).
+checks with a temporary fictional provider. See [verification results](../verification.md).
 
 The live integration gate remains open: no model was configured and the actual Gemini
 project's free-tier eligibility, quotas and billing configuration were not verified. Extraction

@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     app_name: str = "Email to Order"
     database_url: str = ""
+    database_url_unpooled: str = ""
     cookie_secure: bool = False
     gemini_api_key: str = ""
     gemini_model: str = ""

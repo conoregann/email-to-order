@@ -1,5 +1,6 @@
 from alembic import context
 from src.database import Base, database_url, make_engine
+from src.config import settings
 from src.auth.models import GuestSession  # noqa: F401
 from src.customers.models import WorkspaceCustomer  # noqa: F401
 from src.catalogue.models import WorkspaceProduct  # noqa: F401
@@ -8,7 +9,7 @@ from src.orders.models import Draft, DraftLine, ConfirmedOrder  # noqa: F401
 from src.safeguards import PublicLock, RateBucket  # noqa: F401
 
 config = context.config
-url = config.attributes.get("database_url") or database_url()
+url = config.attributes.get("database_url") or database_url(settings.database_url_unpooled)
 
 if context.is_offline_mode():
     context.configure(url=url, target_metadata=Base.metadata, literal_binds=True)

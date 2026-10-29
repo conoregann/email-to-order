@@ -2,6 +2,15 @@
 
 These dated records describe earlier milestones. Test counts and remaining-work statements apply to those runs. For current setup and implemented safeguards, see the [README](../README.md) and [operations guide](operations.md).
 
+## Neon setup — 29 October 2026
+
+- Installed Neon CLI 8.13.2 and ran the requested `neon init` for project `plain-credit-03114907`, organization `org-royal-frog-97073756`, branch `production`. Init linked offline; browser authentication and the subsequent `neon deploy` verified the connection. Final deploy output: `No changes — branch production already matches the policy.` / `Utilized services: Postgres` / `Pulled 3 Neon variables into .env`.
+- `DATABASE_URL`, `DATABASE_URL_UNPOOLED` and `NEON_BRANCH` are stored only in the ignored `.env`; unrelated existing environment values were preserved. The ignored `.neon` stores the local project/branch link. SQLAlchemy/Psycopg uses the pooled URL for requests and the direct URL for Alembic migrations.
+- `npm run build` passed from the root (`113 modules transformed`); frontend lint and all 16 frontend tests passed. All 154 backend tests passed on SQLite. Two existing dependency deprecation warnings remain (Starlette/httpx and google-genai).
+- Before production, tested migration and application behavior on expiring branch `verify-email-to-order-20261029` (`br-lively-paper-b9kevhrs`), which expires at 00:00 UTC on 30 October 2026. Production then passed the same checks using its actual environment variables: client TLS, migration to revision `0005`, HTTP health, frontend and `/orders` deep link, guest creation, sample draft creation, editing, confirmation for EUR 27.60, direct database readback, and persistence/history after a server restart. One fictional confirmed order remains on production as verification evidence; no real emails or AI requests were sent.
+- The temporary verification harness initially assumed JSON connection-string output and server-side TLS reporting; corrected it to accept the CLI's plain URI and inspect client TLS. Final verification passed on both branches. Init also warned that the optional Copilot CLI was absent; this did not block Neon or the app.
+- This verifies the Neon database with a locally running application. It does not publish a public frontend/API URL; Render deployment remains separate.
+
 ## Final readiness pass — 29 October 2026
 
 The local demo passes its final checks. No application code or UI changes were needed, and the README was preserved unchanged. This pass used Node.js 22.22.2 and Python 3.14.7; it does not establish a remote CI result on Python 3.12 or PostgreSQL 16.

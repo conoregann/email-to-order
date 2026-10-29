@@ -2,6 +2,29 @@
 
 These dated records describe earlier milestones. Test counts and remaining-work statements apply to those runs. For current setup and implemented safeguards, see the [README](../README.md) and [operations guide](operations.md).
 
+## Final readiness pass — 29 October 2026
+
+The local demo passes its final checks. No application code or UI changes were needed, and the README was preserved unchanged. This pass used Node.js 22.22.2 and Python 3.14.7; it does not establish a remote CI result on Python 3.12 or PostgreSQL 16.
+
+- All 154 backend tests passed on SQLite and an isolated PostgreSQL 14.17 instance, including migration downgrade/upgrade and model alignment, workspace isolation and expiry, concurrent confirmation and quota reservations, cleanup, extraction failures, quantity decisions and immutable confirmed snapshots.
+- A clean frontend install from `app/package-lock.json` succeeded using cached packages. Frontend lint, all 16 frontend tests, TypeScript checks and the production build passed again after that install.
+- `pip check` found no broken installed requirements. `npm audit` found zero known vulnerabilities in the locked frontend dependencies, including development dependencies. This does not constitute a Python vulnerability audit.
+- A tracked-file check found no `.env`, database files or matches for the checked Google/GitHub token and private-key patterns. This was a limited working-tree check, not a full Git-history secret audit.
+- A real browser exercised the production build served by FastAPI against a separate disposable SQLite database with extraction disabled. The straightforward saved sample required explicit customer, delivery and product review, saved successfully, passed validation and confirmed two cases for EUR 27.60. The confirmed direct URL survived reload and the order appeared in history.
+- Manual pasted-text entry created a blank manual draft with the supplied text preserved and later review steps blocked until a customer was selected. No live extraction was offered. Mobile review and history had no horizontal page overflow at 390px; desktop manual review fit at 1440px. The browser console had no errors or warnings through confirmation and reload.
+- No live Gemini request was made in this pass. The successful live workflow is recorded below. Two third-party deprecation warnings remain in the Python suite (Starlette/httpx TestClient and Google SDK typing); they do not fail the checks.
+
+### Remaining setup
+
+No further implementation is required for the documented local-demo scope. Before a public launch:
+
+1. Complete the Gemini project quota and billing checks recorded below before offering live extraction publicly; keep extraction disabled until those settings are verified.
+2. Choose and configure hosting, persistent database storage, HTTPS with `COOKIE_SECURE=true`, backend secrets and trusted proxy addresses. Run migrations before starting the API and smoke-test the deployed URL, including deep links and workspace cookies.
+3. Install and monitor the [hourly cleanup job](operations.md#expired-workspace-cleanup). Configure database backups and verify restoration, and establish application/health monitoring and log rotation on the host.
+4. Confirm the hosted CI checks pass for the final revision. The repository workflow covers frontend lint/tests/build and backend tests on SQLite and PostgreSQL 16 with Python 3.12.
+
+These are deployment and account tasks, not completed deployment claims. Stock, confirmation emails, tax and shipping retain the documented demo limitations.
+
 # AI-assisted draft verification — 23 October 2026
 
 ## Results
@@ -76,7 +99,7 @@ successful workflow above.
 
 See [setup, limits and data handling](../README.md#configuration), [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output) and [model pricing/data use](https://ai.google.dev/gemini-api/docs/pricing). Free-tier content may be used to improve Google's products; keep demo text fictional.
 
-## Remaining public-demo work
+## Remaining public-demo work at this milestone (superseded above)
 
 The implementation phase's automated/browser checks pass; live integration verification remains open. Physical retention cleanup, pre-parse body limits, API/session creation rate limits, bounded storage/history and public deployment are still pending. Extraction can be disabled with `EXTRACTION_ENABLED=false` and an API restart while retaining manual and saved-example access. No hosting, billing upgrades, real inbox data or real sending were enabled.
 

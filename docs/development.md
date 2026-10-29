@@ -31,4 +31,4 @@ CI runs frontend checks and backend tests on SQLite and PostgreSQL. Develop on `
 
 ## Demo limits
 
-Live Gemini verification and public deployment are pending. Guest workspaces expire after 24 hours; [schedule cleanup](operations.md#expired-workspace-cleanup) to delete expired records. Stock is not reserved, and tax and shipping are not calculated.
+The local demo is verified; see the [final readiness pass](verification.md#final-readiness-pass--29-october-2026). Live Gemini extraction passed, with project quota and billing evidence still outstanding. Public deployment is a separate remaining step. Guest workspaces expire after 24 hours; [schedule cleanup](operations.md#expired-workspace-cleanup) to delete expired records. Stock is not reserved, and tax and shipping are not calculated.

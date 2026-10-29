@@ -36,11 +36,43 @@ Evidence, visually inspected:
 - [AI-assisted desktop review](screenshots/ai-review-desktop.png)
 - [AI-assisted mobile review](screenshots/ai-review-mobile.png)
 
-## Live integration gate — outstanding
+## Live Gemini verification — 29 October 2026
 
-No live Gemini smoke check was performed. Local configuration had a key, but no explicit model, enabled flag or verified project free-tier/quotas/billing setup. The key was not printed or used. Model support and pricing documentation were checked; that cannot establish account/project eligibility.
+The fictional-data live extraction, staff review and confirmation passed. Project quota values
+and billing settings still need evidence before the full integration gate can be closed.
 
-Before enabling: verify structured-output support and free-tier eligibility for the selected model in the actual project, verify quotas and billing/overage settings without enabling paid services, lower application limits if necessary, then deliberately extract fictional text once. Record the actual model identifier, date, outcome, observed allowance consumption and successful staff review/confirmation here. Do not treat mocked tests as live verification.
+- Configured model: `gemini-3.5-flash-lite`. A real authenticated `models.get` call returned
+  version `3.5-flash-lite-07-2026`. Google's [model documentation](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite)
+  confirms structured-output support; the live application call also passed its JSON Schema
+  request and local Pydantic validation. No provider was mocked for this smoke check.
+- The user's AI Studio screenshot shows project `email-to-order` on **Free tier**.
+  It does not show the project's RPM/TPM/RPD limits or billing configuration. Google's public
+  pricing table alone does not establish these project settings.
+- At 10:26:58 UTC the user submitted the fictional Harbour Cafe email through the browser.
+  Extraction completed at 10:27:00 UTC with SKU `OAT-1L-06`, quantity `2`, unit `case`,
+  the supplied delivery address and no invented delivery date. Customer name was empty in
+  the model facts; deterministic matching resolved the supplied email to Harbour Cafe.
+- The initial persisted suggestion had delivery and product approvals both false. Staff
+  explicitly approved them and confirmed at 10:27:33 UTC. Order `ORD-2026-13F1085B9534`
+  persisted two cases at EUR 27.60, no validation issues, the original fictional email,
+  initial unapproved values and unchanged extraction provenance. Confirmation is simulated;
+  no email was sent and no stock was reserved.
+- Application allowance: the local database's UTC-day attempt count increased from **0 to 1**.
+  Attempt `31c36296-afc3-46c7-96aa-d4b366b98ead` succeeded with no error. This consumes
+  **1 of 25** global daily attempts and **1 of 5** attempts in that guest's rolling 24-hour
+  allowance (24 and 4 remaining respectively at verification). These are application caps,
+  not provider quotas. The provider screenshot shows aggregate API activity, but supplies
+  no exact before/after generation or token delta. Token consumption was not captured by
+  the existing adapter and must not be inferred from application counts.
+- Regression checks on this date: 154 backend tests passed on SQLite; all 16 frontend tests,
+  frontend lint and the production build passed. Manual and saved-example paths remain
+  available and covered by these tests; their browser recheck was not supplied for this run.
+
+Remaining account checks: in AI Studio select the project owning the configured key, open
+**Rate Limit**, and record `gemini-3.5-flash-lite` RPM/TPM/RPD limits and current usage. Check
+**Billing** without enabling billing or upgrading. Record those results here and lower the
+application caps if necessary. A second live extraction is not needed to establish the
+successful workflow above.
 
 See [setup, limits and data handling](../README.md#configuration), [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output) and [model pricing/data use](https://ai.google.dev/gemini-api/docs/pricing). Free-tier content may be used to improve Google's products; keep demo text fictional.
 

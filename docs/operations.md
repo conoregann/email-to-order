@@ -2,6 +2,14 @@
 
 Deployment and maintenance notes. For local setup, see the [README](../README.md).
 
+## Portfolio hosting
+
+The root `render.yaml` configures a free Render web service that serves the built React app and FastAPI under one HTTPS URL. In Render, create a Blueprint from this repository's `master` branch. Supply `DATABASE_URL` from a persistent PostgreSQL provider such as Neon, with TLS enabled (`sslmode=require`); keep the connection string in Render's environment settings. Do not use Render's ephemeral local filesystem for the public database or its 30-day free database for a lasting portfolio demo.
+
+The build installs both applications. Each start runs migrations and removes expired workspaces before serving requests. HTTPS-only workspace cookies are enabled; Gemini extraction remains disabled, so visitors can use the fictional examples and manual entry without an AI key. Proxy headers are disabled until the deployment's trusted proxy addresses are verified, so visitors initially share the proxy's address limits. Configure the hourly cleanup described below against the same database before launch.
+
+Render's free service sleeps after 15 minutes without traffic and can take about a minute to wake. After deploying, check `/api/health`, open a deep link, and complete the sample-email-to-confirmed-order flow in a fresh browser session. Copy the service's actual HTTPS URL to the GitHub repository's About → Website field and use that URL for the portfolio's **Open app** link.
+
 ## Public-access safeguards
 
 Run migrations before starting an updated server (`.venv/bin/python -m alembic -c api/alembic.ini upgrade head`). Public limits are persisted in the database and shared across workers and restarts:

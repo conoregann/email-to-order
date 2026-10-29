@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: email-to-order
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: master
+    buildCommand: pip install ./api && npm --prefix app ci && npm --prefix app run build
+    startCommand: cd api && python -m alembic upgrade head && python -m src.cleanup && python -m uvicorn src.main:app --host 0.0.0.0 --port "$PORT" --no-proxy-headers
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.7
+      - key: NODE_VERSION
+        value: 22.22.2
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: EXTRACTION_ENABLED
+        value: "false"
+      - key: DATABASE_URL
+        sync: false

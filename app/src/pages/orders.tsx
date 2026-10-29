@@ -28,12 +28,15 @@ export function Orders() {
           {state.data.items.map(order => <OrderRow key={order.id} order={order} customers={customers.state.status === 'ready' ? customers.state.data : []} />)}
           {state.data.items.length === 0 && <p className="filtered-empty">{filter === 'all' ? 'No orders yet.' : filter === 'draft' ? 'No drafts yet.' : 'No confirmed orders yet.'}</p>}
         </div>
+        <nav className="order-pagination" aria-label="Order history pages">
+          <span className="pagination-summary">{state.data.total === 0 ? '0 orders' : `${page * pageSize + 1}–${page * pageSize + state.data.items.length} of ${state.data.total} ${state.data.total === 1 ? 'order' : 'orders'}`}</span>
+          <div className="pagination-controls">
+            <Button variant="secondary" disabled={page === 0} onClick={() => setPage(page - 1)}><span aria-hidden="true">←</span> Previous</Button>
+            <span className="pagination-page">Page {page + 1} of {Math.max(1, Math.ceil(state.data.total / pageSize))}</span>
+            <Button variant="secondary" disabled={(page + 1) * pageSize >= state.data.total} onClick={() => setPage(page + 1)}>Next <span aria-hidden="true">→</span></Button>
+          </div>
+        </nav>
       </section>
-      <nav aria-label="Order history pages">
-        <Button variant="secondary" disabled={page === 0} onClick={() => setPage(page - 1)}>Previous</Button>
-        <span> Page {page + 1} · {state.data.total} orders </span>
-        <Button variant="secondary" disabled={(page + 1) * pageSize >= state.data.total} onClick={() => setPage(page + 1)}>Next</Button>
-      </nav>
     </>}
   </>
 }

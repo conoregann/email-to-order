@@ -155,6 +155,11 @@ th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); }
 .order-filters button:hover { color: var(--text); }
 .order-filters span { padding-left: 6px; font-variant-numeric: tabular-nums; color: var(--subtle); }
 .filtered-empty { padding: 32px 0; font-size: 0.875rem; }
+.order-pagination { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--border); padding-block: 20px; font-size: 0.8125rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pagination-controls { display: flex; align-items: center; gap: 16px; }
+.pagination-page { white-space: nowrap; }
+.order-pagination .button { font-size: 0.8125rem; }
+.order-pagination .button:hover:disabled { background: var(--surface); }
 @media (max-width: 48rem) {
   .overview-grid { grid-template-columns: 1fr 1fr; }
   .overview-mix { grid-column: 1 / -1; }
@@ -172,6 +177,13 @@ th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); }
   .list-heading { gap: 20px; }
   .order-filters { width: 100%; }
   .order-filters button { flex: 1 1 auto; padding-inline: 8px; white-space: nowrap; }
+  .order-pagination { flex-direction: column; gap: 12px; }
+  .pagination-controls { width: 100%; justify-content: space-between; gap: 8px; }
+  .order-pagination .button { padding-inline: 12px; }
+}
+@media (max-width: 24rem) {
+  .pagination-controls { display: grid; grid-template-columns: 1fr 1fr; }
+  .pagination-page { grid-column: 1 / -1; grid-row: 1; text-align: center; }
 }
 
 /* Shared controls and a quieter page frame. */

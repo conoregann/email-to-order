@@ -10,7 +10,7 @@ SQLite stores data in `.local/orders.db`. After backend updates, reinstall Pytho
 
 ## Configuration
 
-Settings live in the root `.env`. See [.env.example](.env.example) for all options.
+Settings live in the root `.env`. See [.env.example](../.env.example) for all options.
 
 - **PostgreSQL:** set `DATABASE_URL` and run migrations. Existing SQLite data is not copied.
 - **Gemini:** disabled by default. Set `GEMINI_API_KEY`, `GEMINI_MODEL` and `EXTRACTION_ENABLED=true`, then restart. Verify model support, project quotas and billing settings first. Extraction sends email text to Gemini; use fictional data and review every suggestion. Set `EXTRACTION_ENABLED=false` to disable it.

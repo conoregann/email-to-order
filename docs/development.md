@@ -1,0 +1,34 @@
+# Development
+
+See the [README](../README.md#run-locally) for first-time setup.
+
+## Local development
+
+Add `--reload` to the backend command. In another terminal, run `npm --prefix app run dev` from the repository root and open the URL Vite prints. Vite forwards `/api` requests to the backend.
+
+SQLite stores data in `.local/orders.db`. After backend updates, reinstall Python dependencies and rerun migrations.
+
+## Configuration
+
+Settings live in the root `.env`. See [.env.example](.env.example) for all options.
+
+- **PostgreSQL:** set `DATABASE_URL` and run migrations. Existing SQLite data is not copied.
+- **Gemini:** disabled by default. Set `GEMINI_API_KEY`, `GEMINI_MODEL` and `EXTRACTION_ENABLED=true`, then restart. Verify model support, project quotas and billing settings first. Extraction sends email text to Gemini; use fictional data and review every suggestion. Set `EXTRACTION_ENABLED=false` to disable it.
+- **HTTPS:** set `COOKIE_SECURE=true`. Keep credentials on the backend.
+
+## Checks
+
+Run from the repository root:
+
+```sh
+npm --prefix app run lint
+npm --prefix app test
+npm --prefix app run build
+.venv/bin/python -m pytest api/tests -c api/pyproject.toml
+```
+
+CI runs frontend checks and backend tests on SQLite and PostgreSQL. Develop on `development`; review and verify changes before merging into `master`.
+
+## Demo limits
+
+Live Gemini verification and public deployment are pending. Guest workspaces expire after 24 hours; [schedule cleanup](operations.md#expired-workspace-cleanup) to delete expired records. Stock is not reserved, and tax and shipping are not calculated.
